@@ -1,5 +1,8 @@
+import { useMemo, useState } from "react";
+import { Search, X } from "lucide-react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { Avatar, Card, PageTitle, SectionTitle } from "@/components/betaling/Bits";
+import { Input } from "@/components/ui/input";
 import { formatNOK } from "@/lib/betaling";
 
 export type CreditorSummary = {
@@ -10,7 +13,19 @@ export type CreditorSummary = {
   casesPaid: number;
   note: string;
   target: string;
+  urgent: boolean;
+  caseNos: string[];
+  kids: string[];
 };
+
+type Filter = "alle" | "ubetalt" | "betalt" | "haster";
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "alle", label: "Alle" },
+  { key: "ubetalt", label: "Gjenstår" },
+  { key: "betalt", label: "Fullført" },
+  { key: "haster", label: "Haster" },
+];
 
 export function GjeldTab({
   chart,
@@ -19,9 +34,30 @@ export function GjeldTab({
   chart: { month: string; gjeld: number }[];
   creditors: CreditorSummary[];
 }) {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<Filter>("alle");
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return creditors.filter((c) => {
+      const done = c.paid >= c.total;
+      if (filter === "ubetalt" && done) return false;
+      if (filter === "betalt" && !done) return false;
+      if (filter === "haster" && !c.urgent) return false;
+      if (!q) return true;
+      return [c.creditor, c.note, c.target, ...c.caseNos, ...c.kids]
+        .join(" ")
+        .toLowerCase()
+        .includes(q);
+    });
+  }, [creditors, query, filter]);
+
+  const sum = visible.reduce((s, c) => s + (c.total - c.paid), 0);
+
   return (
     <div className="space-y-5">
       <PageTitle>Gjeld</PageTitle>
+
 
       <Card className="p-5">
         <h2 className="text-lg font-semibold">Gjeldsutvikling</h2>
