@@ -26,13 +26,14 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
   const [pinValue, setPinValue] = useState(settings.pin ?? "");
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
 
-
   useEffect(() => {
     if (open) {
       setDraft(settings);
       setPinEnabled(!!settings.pin);
       setPinValue(settings.pin ?? "");
+      setPermission(notificationPermission());
     }
+
   }, [open, settings]);
 
   const num = (v: string) => Number(v.replace(",", ".")) || 0;
