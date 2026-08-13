@@ -142,3 +142,11 @@
     color: var(--color-foreground);
   }
 }
+
+@utility safe-area-pb {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+@utility safe-area-pt {
+  padding-top: calc(1rem + env(safe-area-inset-top));
+}
