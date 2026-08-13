@@ -42,16 +42,6 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
         </DialogHeader>
 
         <div className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="income">Månedlig inntekt (kr)</Label>
-            <Input
-              id="income"
-              inputMode="decimal"
-              value={draft.income ? String(draft.income) : ""}
-              onChange={(e) => setDraft({ ...draft, income: num(e.target.value) })}
-            />
-          </div>
-
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label htmlFor="goal">Sparemål (kr)</Label>
@@ -88,7 +78,9 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
                 maxLength={4}
                 placeholder="••••"
                 value={pinValue}
-                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                onChange={(e) =>
+                  setPinValue(e.target.value.replace(/\D/g, "").slice(0, 4))
+                }
               />
             )}
           </div>
