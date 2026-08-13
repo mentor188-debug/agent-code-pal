@@ -123,7 +123,10 @@ function Index() {
   }, [extra, totalPlan]);
 
   const creditors = useMemo<CreditorSummary[]>(() => {
-    const map = new Map<string, CreditorSummary & { caseSet: Set<string>; paidCases: Set<string> }>();
+    const map = new Map<
+      string,
+      CreditorSummary & { caseSet: Set<string>; paidCases: Set<string>; kidSet: Set<string> }
+    >();
     MONTH_KEYS.forEach((k) => {
       debtsFor(k, extra).forEach((d) => {
         const cur =
@@ -136,11 +139,21 @@ function Index() {
             casesPaid: 0,
             note: d.description,
             target: shortMonthLabel(k),
+            caseNos: [],
+            kids: [],
+            urgent: false,
             caseSet: new Set<string>(),
             paidCases: new Set<string>(),
-          } as CreditorSummary & { caseSet: Set<string>; paidCases: Set<string> });
+            kidSet: new Set<string>(),
+          } as CreditorSummary & {
+            caseSet: Set<string>;
+            paidCases: Set<string>;
+            kidSet: Set<string>;
+          });
         cur.total += d.amount;
         cur.caseSet.add(d.caseNo);
+        if (d.kid) cur.kidSet.add(d.kid);
+        if (d.urgent) cur.urgent = true;
         if (paid.includes(d.id)) {
           cur.paid += d.amount;
           cur.paidCases.add(d.caseNo);
@@ -158,6 +171,9 @@ function Index() {
         casesPaid: c.paidCases.size,
         note: c.note,
         target: c.target,
+        urgent: c.urgent,
+        caseNos: [...c.caseSet],
+        kids: [...c.kidSet],
       }))
       .sort((a, b) => b.total - a.total);
   }, [extra, paid]);
