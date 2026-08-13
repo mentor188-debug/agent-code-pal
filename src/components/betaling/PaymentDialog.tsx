@@ -10,103 +10,94 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CATEGORIES, newId, type Category, type Payment } from "@/lib/betaling";
+import { newId, type Debt } from "@/lib/betaling";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editing: Payment | null;
-  onSave: (p: Payment) => void;
+  month: string;
+  editing: Debt | null;
+  onSave: (d: Debt) => void;
   onDelete: (id: string) => void;
 };
 
-const empty = (): Payment => ({
+const empty = (month: string): Debt => ({
   id: newId(),
-  name: "",
+  month,
+  creditor: "",
+  caseNo: "",
+  description: "",
   amount: 0,
-  dueDay: 1,
   kid: "",
   account: "",
-  category: "Annet",
-  recurring: true,
-  paidMonths: [],
+  auto: false,
+  urgent: false,
 });
 
-export function PaymentDialog({ open, onOpenChange, editing, onSave, onDelete }: Props) {
-  const [draft, setDraft] = useState<Payment>(empty);
+export function PaymentDialog({
+  open,
+  onOpenChange,
+  month,
+  editing,
+  onSave,
+  onDelete,
+}: Props) {
+  const [draft, setDraft] = useState<Debt>(() => empty(month));
 
   useEffect(() => {
-    if (open) setDraft(editing ? { ...editing } : empty());
-  }, [open, editing]);
+    if (open) setDraft(editing ? { ...editing } : empty(month));
+  }, [open, editing, month]);
 
-  const set = <K extends keyof Payment>(key: K, value: Payment[K]) =>
+  const set = <K extends keyof Debt>(key: K, value: Debt[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{editing ? "Rediger betaling" : "Ny betaling"}</DialogTitle>
+          <DialogTitle>{editing ? "Rediger krav" : "Nytt krav"}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="name">Navn</Label>
+            <Label htmlFor="creditor">Kreditor</Label>
             <Input
-              id="name"
-              value={draft.name}
-              placeholder="Husleie, strøm, Netflix …"
-              onChange={(e) => set("name", e.target.value)}
+              id="creditor"
+              value={draft.creditor}
+              placeholder="Kredinor, Lowell …"
+              onChange={(e) => set("creditor", e.target.value)}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label htmlFor="caseNo">Saksnr</Label>
+              <Input
+                id="caseNo"
+                value={draft.caseNo}
+                onChange={(e) => set("caseNo", e.target.value)}
+              />
+            </div>
             <div className="grid gap-2">
               <Label htmlFor="amount">Beløp (kr)</Label>
               <Input
                 id="amount"
                 inputMode="decimal"
                 value={draft.amount ? String(draft.amount) : ""}
-                onChange={(e) => set("amount", Number(e.target.value.replace(",", ".")) || 0)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="dueDay">Forfallsdag</Label>
-              <Input
-                id="dueDay"
-                inputMode="numeric"
-                value={String(draft.dueDay)}
                 onChange={(e) =>
-                  set("dueDay", Math.min(31, Math.max(1, Number(e.target.value) || 1)))
+                  set("amount", Number(e.target.value.replace(",", ".")) || 0)
                 }
               />
             </div>
           </div>
 
           <div className="grid gap-2">
-            <Label>Kategori</Label>
-            <Select
-              value={draft.category}
-              onValueChange={(v) => set("category", v as Category)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="description">Beskrivelse</Label>
+            <Input
+              id="description"
+              value={draft.description}
+              onChange={(e) => set("description", e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -115,7 +106,7 @@ export function PaymentDialog({ open, onOpenChange, editing, onSave, onDelete }:
               <Input
                 id="kid"
                 inputMode="numeric"
-                value={draft.kid ?? ""}
+                value={draft.kid}
                 onChange={(e) => set("kid", e.target.value)}
               />
             </div>
@@ -123,9 +114,8 @@ export function PaymentDialog({ open, onOpenChange, editing, onSave, onDelete }:
               <Label htmlFor="account">Kontonummer</Label>
               <Input
                 id="account"
-                inputMode="numeric"
                 placeholder="1234.56.78901"
-                value={draft.account ?? ""}
+                value={draft.account}
                 onChange={(e) => set("account", e.target.value)}
               />
             </div>
@@ -133,13 +123,18 @@ export function PaymentDialog({ open, onOpenChange, editing, onSave, onDelete }:
 
           <div className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
             <div>
-              <p className="text-sm font-medium">Gjentas hver måned</p>
-              <p className="text-xs text-muted-foreground">Faste regninger</p>
+              <p className="text-sm font-medium">Avtalegiro (auto)</p>
+              <p className="text-xs text-muted-foreground">Trekkes automatisk</p>
             </div>
-            <Switch
-              checked={draft.recurring}
-              onCheckedChange={(v) => set("recurring", v)}
-            />
+            <Switch checked={draft.auto} onCheckedChange={(v) => set("auto", v)} />
+          </div>
+
+          <div className="flex items-center justify-between rounded-xl border border-border px-4 py-3">
+            <div>
+              <p className="text-sm font-medium">Hastefrist</p>
+              <p className="text-xs text-muted-foreground">Vises i haster-banneret</p>
+            </div>
+            <Switch checked={draft.urgent} onCheckedChange={(v) => set("urgent", v)} />
           </div>
         </div>
 
@@ -159,7 +154,7 @@ export function PaymentDialog({ open, onOpenChange, editing, onSave, onDelete }:
             <span />
           )}
           <Button
-            disabled={!draft.name.trim() || draft.amount <= 0}
+            disabled={!draft.creditor.trim() || draft.amount <= 0}
             onClick={() => {
               onSave(draft);
               onOpenChange(false);
