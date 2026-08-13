@@ -62,7 +62,10 @@ export function HomeTab({
         </div>
       </header>
 
+      <ReminderBanner reminders={reminders} onOpen={() => onGo("kalender")} />
+
       <InstallPrompt />
+
 
       <div className="space-y-3">
         <NavCard

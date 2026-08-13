@@ -208,6 +208,7 @@ function Index() {
             total={totalPlan}
             urgent={agenda.filter((i) => i.urgent && !paid.includes(i.id))}
             upcoming={agenda.filter((i) => !paid.includes(i.id) && !i.urgent).slice(0, 5)}
+            reminders={reminders}
             onGo={(t) => setTab(t)}
           />
         )}
