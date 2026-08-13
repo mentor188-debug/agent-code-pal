@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentDialog } from "@/components/betaling/PaymentDialog";
 import { SettingsDialog } from "@/components/betaling/SettingsDialog";
 import { PinLock } from "@/components/betaling/PinLock";
+import { InstallPrompt } from "@/components/betaling/InstallPrompt";
 import { FASTE, LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import {
   DEFAULT_SETTINGS,
@@ -113,9 +114,7 @@ function Index() {
   const urgent = items.filter((d) => !d.auto && !paid.includes(d.id) && d.urgent);
 
   const totalPlan = useMemo(
-    () =>
-      MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) +
-      LONNSTREKK_SAK.amount,
+    () => MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) + LONNSTREKK_SAK.amount,
     [extra],
   );
   const totalPaid = useMemo(
@@ -175,7 +174,7 @@ function Index() {
     return <PinLock pin={settings.pin} onUnlock={() => setUnlocked(true)} />;
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-[calc(7rem+env(safe-area-inset-bottom))]">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-5">
           <div>
@@ -210,6 +209,7 @@ function Index() {
           </TabsList>
 
           <TabsContent value="hjem" className="mt-5 space-y-5">
+            <InstallPrompt />
             {urgent.length > 0 && (
               <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4">
                 <div className="flex items-start gap-3">
@@ -390,12 +390,9 @@ function Index() {
 
             <section className="rounded-2xl border border-border bg-card p-5">
               <h2 className="text-sm font-medium">Gjeld nedbetalt</h2>
-              <p className="mt-3 text-3xl font-semibold tabular-nums">
-                {formatNOK(totalPaid)}
-              </p>
+              <p className="mt-3 text-3xl font-semibold tabular-nums">{formatNOK(totalPaid)}</p>
               <p className="text-sm text-muted-foreground">
-                av {formatNOK(totalPlan)} totalt (inkl. lønnstrekk sak{" "}
-                {LONNSTREKK_SAK.caseNo})
+                av {formatNOK(totalPlan)} totalt (inkl. lønnstrekk sak {LONNSTREKK_SAK.caseNo})
               </p>
               <Progress
                 className="mt-4"
@@ -473,7 +470,7 @@ function Index() {
         </Tabs>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-card/95 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-card/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto max-w-2xl px-5 py-4">
           <Button
             className="w-full"
@@ -513,15 +510,7 @@ function Index() {
   );
 }
 
-function Row({
-  label,
-  value,
-  strong,
-}: {
-  label: string;
-  value: string;
-  strong?: boolean;
-}) {
+function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
       <dt className={`text-muted-foreground ${strong ? "font-medium text-foreground" : ""}`}>

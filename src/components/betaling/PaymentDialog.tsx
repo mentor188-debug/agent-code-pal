@@ -34,14 +34,7 @@ const empty = (month: string): Debt => ({
   urgent: false,
 });
 
-export function PaymentDialog({
-  open,
-  onOpenChange,
-  month,
-  editing,
-  onSave,
-  onDelete,
-}: Props) {
+export function PaymentDialog({ open, onOpenChange, month, editing, onSave, onDelete }: Props) {
   const [draft, setDraft] = useState<Debt>(() => empty(month));
 
   useEffect(() => {
@@ -84,9 +77,7 @@ export function PaymentDialog({
                 id="amount"
                 inputMode="decimal"
                 value={draft.amount ? String(draft.amount) : ""}
-                onChange={(e) =>
-                  set("amount", Number(e.target.value.replace(",", ".")) || 0)
-                }
+                onChange={(e) => set("amount", Number(e.target.value.replace(",", ".")) || 0)}
               />
             </div>
           </div>

@@ -23,12 +23,10 @@ function read<T>(key: string, fallback: T): T {
 }
 
 export const loadPaid = () => read<string[]>(KEY_PAID, []);
-export const savePaid = (v: string[]) =>
-  window.localStorage.setItem(KEY_PAID, JSON.stringify(v));
+export const savePaid = (v: string[]) => window.localStorage.setItem(KEY_PAID, JSON.stringify(v));
 
 export const loadExtra = () => read<Debt[]>(KEY_EXTRA, []);
-export const saveExtra = (v: Debt[]) =>
-  window.localStorage.setItem(KEY_EXTRA, JSON.stringify(v));
+export const saveExtra = (v: Debt[]) => window.localStorage.setItem(KEY_EXTRA, JSON.stringify(v));
 
 export const loadSettings = () => ({
   ...DEFAULT_SETTINGS,

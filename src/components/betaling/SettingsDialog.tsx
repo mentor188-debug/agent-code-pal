@@ -78,9 +78,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
                 maxLength={4}
                 placeholder="••••"
                 value={pinValue}
-                onChange={(e) =>
-                  setPinValue(e.target.value.replace(/\D/g, "").slice(0, 4))
-                }
+                onChange={(e) => setPinValue(e.target.value.replace(/\D/g, "").slice(0, 4))}
               />
             )}
           </div>
