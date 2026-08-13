@@ -176,7 +176,7 @@ function Index() {
     return <PinLock pin={settings.pin} onUnlock={() => setUnlocked(true)} />;
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-background pb-[calc(7rem+env(safe-area-inset-bottom))]">
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-5">
           <div>
@@ -475,7 +475,7 @@ function Index() {
         </Tabs>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-card/95 backdrop-blur">
+      <div className="fixed inset-x-0 bottom-0 border-t border-border bg-card/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <div className="mx-auto max-w-2xl px-5 py-4">
           <Button
             className="w-full"
