@@ -211,6 +211,7 @@ function Index() {
           </TabsList>
 
           <TabsContent value="hjem" className="mt-5 space-y-5">
+            <InstallPrompt />
             {urgent.length > 0 && (
               <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-4">
                 <div className="flex items-start gap-3">
@@ -473,8 +474,6 @@ function Index() {
       </TabsContent>
         </Tabs>
       </main>
-
-      <InstallPrompt />
 
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-card/95 backdrop-blur">
         <div className="mx-auto max-w-2xl px-5 py-4">
