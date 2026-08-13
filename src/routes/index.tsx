@@ -28,6 +28,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentDialog } from "@/components/betaling/PaymentDialog";
 import { SettingsDialog } from "@/components/betaling/SettingsDialog";
 import { PinLock } from "@/components/betaling/PinLock";
+import { InstallPrompt } from "@/components/betaling/InstallPrompt";
 import { FASTE, LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import {
   DEFAULT_SETTINGS,
@@ -469,9 +470,11 @@ function Index() {
                 gjeldsnedbetaling.
               </p>
             </section>
-          </TabsContent>
+      </TabsContent>
         </Tabs>
       </main>
+
+      <InstallPrompt />
 
       <div className="fixed inset-x-0 bottom-0 border-t border-border bg-card/95 backdrop-blur">
         <div className="mx-auto max-w-2xl px-5 py-4">
