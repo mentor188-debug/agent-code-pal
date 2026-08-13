@@ -52,7 +52,7 @@ export function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-50 border-b border-border bg-card p-4 pt-[calc(1rem+env(safe-area-inset-top))] shadow-lg">
+    <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4">
       <div className="mx-auto flex max-w-2xl items-start gap-3">
         <Download className="mt-0.5 size-5 shrink-0 text-primary" />
         <div className="flex-1">
