@@ -1,0 +1,656 @@
+// Datagrunnlag hentet fra budsjett_2026_2.xlsx (Budsjett + Nedbetalingsplan).
+export type Debt = {
+  id: string;
+  month: string;
+  creditor: string;
+  caseNo: string;
+  description: string;
+  amount: number;
+  kid: string;
+  account: string;
+  auto: boolean;
+  urgent: boolean;
+};
+
+export const MONTHS = [
+  { key: "2026-08", brutto: 117557, skatt: -28213.68, utleggstrekk: -12400, netto: 76943.32 },
+  { key: "2026-09", brutto: 51200, skatt: -16384, utleggstrekk: -8947, netto: 25869 },
+  { key: "2026-10", brutto: 51200, skatt: -16384, utleggstrekk: 0, netto: 34816 },
+  { key: "2026-11", brutto: 51200, skatt: -16384, utleggstrekk: 0, netto: 34816 },
+  { key: "2026-12", brutto: 51200, skatt: -16384, utleggstrekk: 0, netto: 34816 },
+  { key: "2027-01", brutto: 41666, skatt: -12499.8, utleggstrekk: 0, netto: 29166.2 },
+  { key: "2027-02", brutto: 41666, skatt: -12499.8, utleggstrekk: 0, netto: 29166.2 },
+] as const;
+
+export const FASTE = [
+  { name: "Levepenger", amount: 5000 },
+  { name: "Billån (12,26 % – refinansier når fila er ren)", amount: 3548 },
+  { name: "Lånekassen", amount: 1800 },
+  { name: "Tryg", amount: 2280 },
+] as const;
+
+export const ENGANGS: Record<string, { name: string; amount: number }[]> = {
+  "2026-08": [
+    { name: "ADHD-utredning", amount: 4800 },
+    { name: "Ferie Skiathos", amount: 12500 },
+    { name: "Gave", amount: 5000 },
+  ],
+  "2026-09": [{ name: "PC-skjerm", amount: 4800 }],
+};
+
+export const LONNSTREKK_SAK = { caseNo: "666130322", creditor: "Kredinor", amount: 39582 };
+
+export const DEBTS: Debt[] = [
+  {
+    "month": "2026-08",
+    "creditor": "Kredinor",
+    "caseNo": "514022823",
+    "description": "Avtalegiro → Morrow (22 %)",
+    "amount": 6000,
+    "kid": "223051402282424",
+    "account": "7014.05.01423",
+    "auto": true,
+    "id": "g1",
+    "urgent": false
+  },
+  {
+    "month": "2026-08",
+    "creditor": "Kredinor",
+    "caseNo": "667345923",
+    "description": "Kredinor Finans 22 %",
+    "amount": 12807,
+    "kid": "223066734592423",
+    "account": "7014.05.01423",
+    "auto": false,
+    "id": "g2",
+    "urgent": false
+  },
+  {
+    "month": "2026-08",
+    "creditor": "Kredinor",
+    "caseNo": "514022823",
+    "description": "Morrow 22 % – rest etter giro",
+    "amount": 11317,
+    "kid": "223051402282424",
+    "account": "7014.05.01423",
+    "auto": false,
+    "id": "g3",
+    "urgent": false
+  },
+  {
+    "month": "2026-08",
+    "creditor": "Sky Fitness",
+    "caseNo": "Collectio",
+    "description": "Innfri før lønnstrekket fyrer",
+    "amount": 4770,
+    "kid": "hent i portal",
+    "account": "hent i portal",
+    "auto": false,
+    "id": "g4",
+    "urgent": true
+  },
+  {
+    "month": "2026-08",
+    "creditor": "Fair Collection",
+    "caseNo": "5022932",
+    "description": "AutoSync / AutoPASS",
+    "amount": 1312,
+    "kid": "15022932303",
+    "account": "1506.13.56735",
+    "auto": false,
+    "id": "g5",
+    "urgent": false
+  },
+  {
+    "month": "2026-08",
+    "creditor": "Lowell",
+    "caseNo": "43057394",
+    "description": "Fortum – RETTSLIG VARSEL",
+    "amount": 1061,
+    "kid": "0143057394069856521",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g6",
+    "urgent": true
+  },
+  {
+    "month": "2026-08",
+    "creditor": "Svea",
+    "caseNo": "11634015",
+    "description": "Göteborg parkering",
+    "amount": 924,
+    "kid": "51116340152",
+    "account": "6401.06.90607",
+    "auto": false,
+    "id": "g7",
+    "urgent": false
+  },
+  {
+    "month": "2026-08",
+    "creditor": "Intrum",
+    "caseNo": "45299827",
+    "description": "Viking Redningstjeneste",
+    "amount": 152,
+    "kid": "0045299827217",
+    "account": "7016.05.01217",
+    "auto": false,
+    "id": "g8",
+    "urgent": false
+  },
+  {
+    "month": "2026-09",
+    "creditor": "Kredinor",
+    "caseNo": "537376/23",
+    "description": "Avtalegiro → Bank Norwegian (20,49 %)",
+    "amount": 6000,
+    "kid": "223005373762426",
+    "account": "7014.05.01423",
+    "auto": true,
+    "id": "g9",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Kredinor",
+    "caseNo": "537376/23",
+    "description": "Avtalegiro → Bank Norwegian (økt til 8 000)",
+    "amount": 8000,
+    "kid": "223005373762426",
+    "account": "7014.05.01423",
+    "auto": true,
+    "id": "g10",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Kredinor",
+    "caseNo": "123009525",
+    "description": "Vegfinans – KREDINOR FERDIG",
+    "amount": 5749,
+    "kid": "225012300952425",
+    "account": "7014.05.01423",
+    "auto": false,
+    "id": "g11",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "42204948",
+    "description": "Fortum – hovedstol 1 041",
+    "amount": 1874,
+    "kid": "0142204948069856528",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g12",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "42370407",
+    "description": "Fortum",
+    "amount": 1241,
+    "kid": "0142370407069856523",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g13",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "42691010",
+    "description": "Fortum",
+    "amount": 1109,
+    "kid": "0142691010069856527",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g14",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "40842930",
+    "description": "Sykehuset Østfold",
+    "amount": 980,
+    "kid": "0140842930069856528",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g15",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "41862170",
+    "description": "Fortum",
+    "amount": 758,
+    "kid": "0141862170069856524",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g16",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "41211550",
+    "description": "Fortum",
+    "amount": 685,
+    "kid": "0141211550069856525",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g17",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "42002908",
+    "description": "Fortum",
+    "amount": 619,
+    "kid": "0142002908069856526",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g18",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "41957703",
+    "description": "Fortum",
+    "amount": 615,
+    "kid": "0141957703069856528",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g19",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "43146903",
+    "description": "Fortum – ny sak",
+    "amount": 528,
+    "kid": "hent i portal",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g20",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "42448245",
+    "description": "Fortum",
+    "amount": 288,
+    "kid": "0142448245069856525",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g21",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "41297381",
+    "description": "Fortum",
+    "amount": 277,
+    "kid": "0141297381069856522",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g22",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "41670145",
+    "description": "Fortum",
+    "amount": 243,
+    "kid": "0141670145069856528",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g23",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "38728958",
+    "description": "SATS / Lowell",
+    "amount": 238,
+    "kid": "0138728958069856522",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g24",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "41113664",
+    "description": "Fortum",
+    "amount": 198,
+    "kid": "0141113664069856523",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g25",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Kredinor",
+    "caseNo": "537376/23",
+    "description": "Bank Norwegian – rest",
+    "amount": 131,
+    "kid": "223005373762426",
+    "account": "7014.05.01423",
+    "auto": false,
+    "id": "g26",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "42278649",
+    "description": "Fortum",
+    "amount": 99,
+    "kid": "0142278649069856523",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g27",
+    "urgent": false
+  },
+  {
+    "month": "2026-10",
+    "creditor": "Lowell",
+    "caseNo": "42124324",
+    "description": "Fortum",
+    "amount": 16,
+    "kid": "0142124324069856529",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g28",
+    "urgent": false
+  },
+  {
+    "month": "2026-11",
+    "creditor": "Lowell",
+    "caseNo": "43062724",
+    "description": "Fortum – hovedstol 10 466. LOWELL FERDIG",
+    "amount": 14180,
+    "kid": "0143062724069856522",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g29",
+    "urgent": false
+  },
+  {
+    "month": "2026-11",
+    "creditor": "Lowell",
+    "caseNo": "40920127",
+    "description": "Fortum – hovedstol 3 518",
+    "amount": 4180,
+    "kid": "0140920127069856526",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g30",
+    "urgent": false
+  },
+  {
+    "month": "2026-11",
+    "creditor": "Lowell",
+    "caseNo": "40785013",
+    "description": "Fortum – hovedstol 2 663",
+    "amount": 3562,
+    "kid": "0140785013069856522",
+    "account": "6318.05.20351",
+    "auto": false,
+    "id": "g31",
+    "urgent": false
+  },
+  {
+    "month": "2026-11",
+    "creditor": "PayEx",
+    "caseNo": "K2FJG6",
+    "description": "Nemusklinikken",
+    "amount": 779,
+    "kid": "590048894570859",
+    "account": "8101.07.46116",
+    "auto": false,
+    "id": "g32",
+    "urgent": false
+  },
+  {
+    "month": "2026-11",
+    "creditor": "PayEx",
+    "caseNo": "K2CYSF",
+    "description": "Fastlege Molander",
+    "amount": 726,
+    "kid": "5900488898936597",
+    "account": "8101.07.46116",
+    "auto": false,
+    "id": "g33",
+    "urgent": false
+  },
+  {
+    "month": "2026-11",
+    "creditor": "PayEx",
+    "caseNo": "K2K3ZD",
+    "description": "PayEx Sverige",
+    "amount": 663,
+    "kid": "5900489052881591",
+    "account": "8101.07.46116",
+    "auto": false,
+    "id": "g34",
+    "urgent": false
+  },
+  {
+    "month": "2026-11",
+    "creditor": "PayEx",
+    "caseNo": "K2K34D",
+    "description": "PayEx Sverige",
+    "amount": 626,
+    "kid": "5900489052075595",
+    "account": "8101.07.46116",
+    "auto": false,
+    "id": "g35",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "7159157",
+    "description": "Onepark",
+    "amount": 3863,
+    "kid": "0107159157044238707",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g36",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "7195626",
+    "description": "Onepark",
+    "amount": 3843,
+    "kid": "0107195626044238707",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g37",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "7216613",
+    "description": "Onepark",
+    "amount": 3837,
+    "kid": "0107216613044238700",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g38",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "7253237",
+    "description": "Onepark",
+    "amount": 1918,
+    "kid": "0107253237044238702",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g39",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "PayEx",
+    "caseNo": "K2LF0T",
+    "description": "Norsk Arbeidshelse",
+    "amount": 1632,
+    "kid": "5900489091365592",
+    "account": "8101.07.46116",
+    "auto": false,
+    "id": "g40",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "8005442",
+    "description": "Onepark",
+    "amount": 598,
+    "kid": "0108005442044238707",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g41",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "8908751",
+    "description": "APCOA",
+    "amount": 565,
+    "kid": "0108908751044238709",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g42",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "9151074",
+    "description": "APCOA",
+    "amount": 512,
+    "kid": "0109151074044238708",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g43",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "9287476",
+    "description": "APCOA",
+    "amount": 481,
+    "kid": "0109287476044238702",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g44",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Konnektiv",
+    "caseNo": "94PGNQ",
+    "description": "SkyttelPASS",
+    "amount": 475,
+    "kid": "5900261996150599",
+    "account": "3633.64.95517",
+    "auto": false,
+    "id": "g45",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "9225514",
+    "description": "APCOA",
+    "amount": 457,
+    "kid": "0109225514044238705",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g46",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "9008420",
+    "description": "Nor Tronic",
+    "amount": 456,
+    "kid": "0109008420044238708",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g47",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "8956073",
+    "description": "APCOA",
+    "amount": 425,
+    "kid": "0108956073044238709",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g48",
+    "urgent": false
+  },
+  {
+    "month": "2026-12",
+    "creditor": "Riverty",
+    "caseNo": "8010035",
+    "description": "Onepark",
+    "amount": 112,
+    "kid": "0108010035044238702",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g49",
+    "urgent": false
+  },
+  {
+    "month": "2027-01",
+    "creditor": "Riverty",
+    "caseNo": "7143209",
+    "description": "Onepark – RIVERTY FERDIG",
+    "amount": 4869,
+    "kid": "0107143209044238705",
+    "account": "1503.08.25117",
+    "auto": false,
+    "id": "g50",
+    "urgent": false
+  },
+  {
+    "month": "2027-02",
+    "creditor": "Sergel",
+    "caseNo": "R4RB4V",
+    "description": "Fjellinjen – innfrielse",
+    "amount": 20300,
+    "kid": "5900662859510593",
+    "account": "1638.03.56353",
+    "auto": false,
+    "id": "g51",
+    "urgent": false
+  }
+];
