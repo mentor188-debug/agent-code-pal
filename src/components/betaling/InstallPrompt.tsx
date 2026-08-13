@@ -4,8 +4,13 @@ import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "betaling-install-prompt-dismissed";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => void;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 export function InstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
@@ -26,7 +31,8 @@ export function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", handler);
 
     // iOS Safari does not fire beforeinstallprompt; show a gentle tip instead.
-    if (ios && !("standalone" in window.navigator && (window.navigator as any).standalone)) {
+    const standalone = (window.navigator as Navigator & { standalone?: boolean }).standalone;
+    if (ios && !standalone) {
       setVisible(true);
     }
 
@@ -35,9 +41,8 @@ export function InstallPrompt() {
 
   const install = async () => {
     if (!deferredPrompt) return;
-    const promptEvent = deferredPrompt as any;
-    promptEvent.prompt();
-    const { outcome } = await promptEvent.userChoice;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
       setVisible(false);
     }
