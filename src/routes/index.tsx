@@ -114,9 +114,7 @@ function Index() {
   const urgent = items.filter((d) => !d.auto && !paid.includes(d.id) && d.urgent);
 
   const totalPlan = useMemo(
-    () =>
-      MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) +
-      LONNSTREKK_SAK.amount,
+    () => MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) + LONNSTREKK_SAK.amount,
     [extra],
   );
   const totalPaid = useMemo(
@@ -392,12 +390,9 @@ function Index() {
 
             <section className="rounded-2xl border border-border bg-card p-5">
               <h2 className="text-sm font-medium">Gjeld nedbetalt</h2>
-              <p className="mt-3 text-3xl font-semibold tabular-nums">
-                {formatNOK(totalPaid)}
-              </p>
+              <p className="mt-3 text-3xl font-semibold tabular-nums">{formatNOK(totalPaid)}</p>
               <p className="text-sm text-muted-foreground">
-                av {formatNOK(totalPlan)} totalt (inkl. lønnstrekk sak{" "}
-                {LONNSTREKK_SAK.caseNo})
+                av {formatNOK(totalPlan)} totalt (inkl. lønnstrekk sak {LONNSTREKK_SAK.caseNo})
               </p>
               <Progress
                 className="mt-4"
@@ -471,7 +466,7 @@ function Index() {
                 gjeldsnedbetaling.
               </p>
             </section>
-      </TabsContent>
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -515,15 +510,7 @@ function Index() {
   );
 }
 
-function Row({
-  label,
-  value,
-  strong,
-}: {
-  label: string;
-  value: string;
-  strong?: boolean;
-}) {
+function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-4">
       <dt className={`text-muted-foreground ${strong ? "font-medium text-foreground" : ""}`}>

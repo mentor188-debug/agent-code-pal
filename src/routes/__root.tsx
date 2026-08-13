@@ -81,10 +81,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Betaling Tracker" },
-      { name: "description", content: "Privat oversikt over budsjett og nedbetalingsplan: krav per måned med KID og kontonummer, huk av betalt, hastefrister, resultat og grafer mot gjeldfri februar 2027." },
+      {
+        name: "description",
+        content:
+          "Privat oversikt over budsjett og nedbetalingsplan: krav per måned med KID og kontonummer, huk av betalt, hastefrister, resultat og grafer mot gjeldfri februar 2027.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "Betaling Tracker" },
-      { property: "og:description", content: "Privat oversikt over budsjett og nedbetalingsplan med hjemskjerm-støtte og offline bruk." },
+      {
+        property: "og:description",
+        content:
+          "Privat oversikt over budsjett og nedbetalingsplan med hjemskjerm-støtte og offline bruk.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
