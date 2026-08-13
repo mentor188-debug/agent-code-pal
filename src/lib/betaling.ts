@@ -4,9 +4,17 @@ export type Settings = {
   savingsGoal: number;
   saved: number;
   pin: string | null;
+  reminderDays: number;
+  notify: boolean;
 };
 
-export const DEFAULT_SETTINGS: Settings = { savingsGoal: 0, saved: 0, pin: null };
+export const DEFAULT_SETTINGS: Settings = {
+  savingsGoal: 0,
+  saved: 0,
+  pin: null,
+  reminderDays: 5,
+  notify: false,
+};
 
 const KEY_PAID = "bt_paid_v2";
 const KEY_EXTRA = "bt_extra_v2";

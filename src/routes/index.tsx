@@ -12,6 +12,7 @@ import { BudsjettTab } from "@/components/betaling/tabs/BudsjettTab";
 import { SparingTab } from "@/components/betaling/tabs/SparingTab";
 import { FASTE, LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
+import { dueReminders, fireReminders } from "@/lib/varsler";
 import {
   DEFAULT_SETTINGS,
   MONTH_KEYS,
@@ -170,6 +171,19 @@ function Index() {
     [extra],
   );
 
+  const reminders = useMemo(
+    () =>
+      current === currentMonthKey()
+        ? dueReminders(agenda, paid, settings.reminderDays)
+        : [],
+    [agenda, paid, settings.reminderDays, current],
+  );
+
+  useEffect(() => {
+    if (!ready || !settings.notify || reminders.length === 0) return;
+    fireReminders(reminders);
+  }, [ready, settings.notify, reminders]);
+
   const togglePaid = (id: string) => {
     const next = paid.includes(id) ? paid.filter((x) => x !== id) : [...paid, id];
     setPaid(next);
@@ -208,6 +222,7 @@ function Index() {
             total={totalPlan}
             urgent={agenda.filter((i) => i.urgent && !paid.includes(i.id))}
             upcoming={agenda.filter((i) => !paid.includes(i.id) && !i.urgent).slice(0, 5)}
+            reminders={reminders}
             onGo={(t) => setTab(t)}
           />
         )}
