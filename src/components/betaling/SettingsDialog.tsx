@@ -24,6 +24,8 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
   const [draft, setDraft] = useState<Settings>(settings);
   const [pinEnabled, setPinEnabled] = useState(!!settings.pin);
   const [pinValue, setPinValue] = useState(settings.pin ?? "");
+  const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
+
 
   useEffect(() => {
     if (open) {
