@@ -162,7 +162,29 @@ function Index() {
         map.set(d.creditor, cur);
       });
     });
+    const lonn = map.get(LONNSTREKK_SAK.creditor);
+    if (lonn) {
+      lonn.total += LONNSTREKK_SAK.amount;
+      lonn.caseSet.add(LONNSTREKK_SAK.caseNo);
+    } else {
+      map.set(LONNSTREKK_SAK.creditor, {
+        creditor: LONNSTREKK_SAK.creditor,
+        total: LONNSTREKK_SAK.amount,
+        paid: 0,
+        cases: 1,
+        casesPaid: 0,
+        note: "Lønnstrekk via Namsfogden",
+        target: "feb.",
+        caseNos: [],
+        kids: [],
+        urgent: false,
+        caseSet: new Set([LONNSTREKK_SAK.caseNo]),
+        paidCases: new Set<string>(),
+        kidSet: new Set<string>(),
+      });
+    }
     return [...map.values()]
+
       .map((c) => ({
         creditor: c.creditor,
         total: c.total,
