@@ -10,11 +10,14 @@ import {
   PiggyBank,
   Settings as SettingsIcon,
   Wallet,
+  Zap,
 } from "lucide-react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
+  Line,
+  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -25,38 +28,43 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PaymentDialog } from "@/components/betaling/PaymentDialog";
 import { SettingsDialog } from "@/components/betaling/SettingsDialog";
 import { PinLock } from "@/components/betaling/PinLock";
+import { FASTE, LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import {
-  addMonths,
-  daysUntil,
-  dueDateFor,
+  DEFAULT_SETTINGS,
+  MONTH_KEYS,
+  currentMonthKey,
+  debtsFor,
+  engangsFor,
+  fasteSum,
   formatNOK,
-  isPaid,
-  loadPayments,
+  loadExtra,
+  loadPaid,
   loadSettings,
-  monthKey,
   monthLabel,
-  savePayments,
+  monthMeta,
+  monthResult,
+  saveExtra,
+  savePaid,
   saveSettings,
   shortMonthLabel,
-  type Payment,
+  type Debt,
   type Settings,
-  DEFAULT_SETTINGS,
 } from "@/lib/betaling";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Betaling Tracker – oversikt over regninger og sparing" },
+      { title: "Betaling Tracker – nedbetalingsplan mot gjeldfri" },
       {
         name: "description",
         content:
-          "Privat betalingsoversikt: forfall, KID og kontonummer, huk av betalt, budsjett, sparemål og grafer – alt lagret lokalt på din enhet.",
+          "Privat oversikt over budsjett og nedbetalingsplan: krav per måned med KID og kontonummer, huk av betalt, hastefrister, resultat og grafer mot gjeldfri februar 2027.",
       },
-      { property: "og:title", content: "Betaling Tracker – regninger og sparing" },
+      { property: "og:title", content: "Betaling Tracker – nedbetalingsplan" },
       {
         property: "og:description",
         content:
-          "Hold styr på faste regninger, forfallsdatoer, budsjett og sparemål i én privat app.",
+          "Måned for måned: hvem du betaler, hvor mye, KID og konto – med haster-varsler og budsjettoversikt.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -68,82 +76,88 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [ready, setReady] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [paid, setPaid] = useState<string[]>([]);
+  const [extra, setExtra] = useState<Debt[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const [current, setCurrent] = useState(() => monthKey(new Date()));
+  const [current, setCurrent] = useState<string>(() => currentMonthKey());
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Payment | null>(null);
+  const [editing, setEditing] = useState<Debt | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     const s = loadSettings();
-    setPayments(loadPayments());
+    setPaid(loadPaid());
+    setExtra(loadExtra());
     setSettings(s);
     setUnlocked(!s.pin);
     setReady(true);
   }, []);
 
-  const updatePayments = (next: Payment[]) => {
-    setPayments(next);
-    savePayments(next);
+  const idx = MONTH_KEYS.indexOf(current);
+  const meta = monthMeta(current);
+  const items = useMemo(
+    () =>
+      debtsFor(current, extra).sort((a, b) => {
+        if (a.urgent !== b.urgent) return a.urgent ? -1 : 1;
+        return b.amount - a.amount;
+      }),
+    [current, extra],
+  );
+  const res = monthResult(current, extra);
+  const paidTotal = items
+    .filter((d) => paid.includes(d.id) || d.auto)
+    .reduce((s, d) => s + d.amount, 0);
+  const remaining = res.gjeld - paidTotal;
+
+  const urgent = items.filter((d) => !d.auto && !paid.includes(d.id) && d.urgent);
+
+  const totalPlan = useMemo(
+    () =>
+      MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) +
+      LONNSTREKK_SAK.amount,
+    [extra],
+  );
+  const totalPaid = useMemo(
+    () =>
+      MONTH_KEYS.flatMap((k) => debtsFor(k, extra))
+        .filter((d) => paid.includes(d.id))
+        .reduce((s, d) => s + d.amount, 0),
+    [paid, extra],
+  );
+
+  const chartData = useMemo(
+    () =>
+      MONTH_KEYS.map((k) => {
+        const r = monthResult(k, extra);
+        return { month: shortMonthLabel(k), gjeld: r.gjeld, resultat: r.resultat };
+      }),
+    [extra],
+  );
+
+  const balanceData = useMemo(() => {
+    let bal = 0;
+    return MONTH_KEYS.map((k) => {
+      bal += monthResult(k, extra).resultat;
+      return { month: shortMonthLabel(k), balanse: Math.round(bal) };
+    });
+  }, [extra]);
+
+  const togglePaid = (d: Debt) => {
+    const next = paid.includes(d.id) ? paid.filter((x) => x !== d.id) : [...paid, d.id];
+    setPaid(next);
+    savePaid(next);
+  };
+
+  const updateExtra = (next: Debt[]) => {
+    setExtra(next);
+    saveExtra(next);
   };
 
   const updateSettings = (next: Settings) => {
     setSettings(next);
     saveSettings(next);
     if (!next.pin) setUnlocked(true);
-  };
-
-  const monthPayments = useMemo(
-    () =>
-      payments
-        .filter((p) => p.recurring || !p.paidMonths.length || isPaid(p, current))
-        .map((p) => ({
-          payment: p,
-          date: dueDateFor(p, current),
-          paid: isPaid(p, current),
-        }))
-        .sort((a, b) => a.date.getTime() - b.date.getTime()),
-    [payments, current],
-  );
-
-  const total = monthPayments.reduce((s, r) => s + r.payment.amount, 0);
-  const paidTotal = monthPayments
-    .filter((r) => r.paid)
-    .reduce((s, r) => s + r.payment.amount, 0);
-  const remaining = total - paidTotal;
-  const leftOfIncome = settings.income - total;
-
-  const urgent = monthPayments.filter(
-    (r) => !r.paid && daysUntil(r.date) <= 5,
-  );
-
-  const chartData = useMemo(() => {
-    const keys = Array.from({ length: 6 }, (_, i) => addMonths(monthKey(new Date()), i - 5));
-    return keys.map((k) => ({
-      month: shortMonthLabel(k),
-      betalt: payments
-        .filter((p) => isPaid(p, k))
-        .reduce((s, p) => s + p.amount, 0),
-      total: payments
-        .filter((p) => p.recurring || isPaid(p, k))
-        .reduce((s, p) => s + p.amount, 0),
-    }));
-  }, [payments]);
-
-  const togglePaid = (p: Payment) => {
-    const next = payments.map((x) =>
-      x.id === p.id
-        ? {
-            ...x,
-            paidMonths: isPaid(x, current)
-              ? x.paidMonths.filter((m) => m !== current)
-              : [...x.paidMonths, current],
-          }
-        : x,
-    );
-    updatePayments(next);
   };
 
   const copy = async (text: string, id: string) => {
@@ -166,7 +180,9 @@ function Index() {
         <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-5">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Betaling Tracker</h1>
-            <p className="text-sm text-muted-foreground">Privat oversikt · lagret på enheten</p>
+            <p className="text-sm text-muted-foreground">
+              Gjeldfri februar 2027 · {formatNOK(totalPlan)} i plan
+            </p>
           </div>
           <Button
             variant="ghost"
@@ -200,22 +216,14 @@ function Index() {
                   <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" />
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-destructive">
-                      Haster · {urgent.length} forfaller snart
+                      Haster · {urgent.length} krav med frist
                     </p>
                     <ul className="text-sm text-foreground/80">
-                      {urgent.map((r) => {
-                        const d = daysUntil(r.date);
-                        return (
-                          <li key={r.payment.id}>
-                            {r.payment.name} – {formatNOK(r.payment.amount)} ·{" "}
-                            {d < 0
-                              ? `${Math.abs(d)} dager på overtid`
-                              : d === 0
-                                ? "forfaller i dag"
-                                : `om ${d} dag${d === 1 ? "" : "er"}`}
-                          </li>
-                        );
-                      })}
+                      {urgent.map((d) => (
+                        <li key={d.id}>
+                          {d.creditor} – {formatNOK(d.amount)} · {d.description}
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 </div>
@@ -227,7 +235,8 @@ function Index() {
                 variant="ghost"
                 size="icon"
                 aria-label="Forrige måned"
-                onClick={() => setCurrent(addMonths(current, -1))}
+                disabled={idx <= 0}
+                onClick={() => setCurrent(MONTH_KEYS[idx - 1] as string)}
               >
                 <ChevronLeft className="size-5" />
               </Button>
@@ -236,95 +245,99 @@ function Index() {
                 variant="ghost"
                 size="icon"
                 aria-label="Neste måned"
-                onClick={() => setCurrent(addMonths(current, 1))}
+                disabled={idx >= MONTH_KEYS.length - 1}
+                onClick={() => setCurrent(MONTH_KEYS[idx + 1] as string)}
               >
                 <ChevronRight className="size-5" />
               </Button>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <StatCard label="Totalt" value={formatNOK(total)} />
+              <StatCard label="Du betaler manuelt" value={formatNOK(res.manuelt)} />
               <StatCard label="Betalt" value={formatNOK(paidTotal)} />
               <StatCard label="Gjenstår" value={formatNOK(remaining)} highlight />
             </div>
 
             <div className="space-y-3">
-              {monthPayments.length === 0 && (
+              {items.length === 0 && (
                 <p className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-                  Ingen betalinger ennå. Trykk «Ny betaling» for å legge til din første regning.
+                  Ingen krav denne måneden.
                 </p>
               )}
 
-              {monthPayments.map(({ payment, date, paid }) => {
-                const d = daysUntil(date);
+              {items.map((d) => {
+                const isPaid = paid.includes(d.id);
                 return (
                   <article
-                    key={payment.id}
-                    className={`rounded-2xl border border-border bg-card p-4 transition-opacity ${
-                      paid ? "opacity-60" : ""
-                    }`}
+                    key={d.id}
+                    className={`rounded-2xl border bg-card p-4 transition-opacity ${
+                      isPaid ? "border-border opacity-60" : ""
+                    } ${d.urgent && !isPaid ? "border-destructive/40" : "border-border"}`}
                   >
                     <div className="flex items-start gap-3">
                       <button
-                        onClick={() => togglePaid(payment)}
-                        aria-label={paid ? "Marker som ubetalt" : "Marker som betalt"}
+                        onClick={() => togglePaid(d)}
+                        aria-label={isPaid ? "Marker som ubetalt" : "Marker som betalt"}
                         className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                          paid
+                          isPaid
                             ? "border-primary bg-primary text-primary-foreground"
                             : "border-border hover:border-primary"
                         }`}
                       >
-                        {paid && <Check className="size-4" />}
+                        {isPaid && <Check className="size-4" />}
                       </button>
 
                       <button
                         className="min-w-0 flex-1 text-left"
                         onClick={() => {
-                          setEditing(payment);
-                          setDialogOpen(true);
+                          if (d.id.startsWith("x")) {
+                            setEditing(d);
+                            setDialogOpen(true);
+                          }
                         }}
                       >
                         <div className="flex items-baseline justify-between gap-3">
-                          <h2
-                            className={`truncate font-medium ${paid ? "line-through" : ""}`}
-                          >
-                            {payment.name}
+                          <h2 className={`truncate font-medium ${isPaid ? "line-through" : ""}`}>
+                            {d.creditor}
                           </h2>
                           <span className="shrink-0 font-semibold tabular-nums">
-                            {formatNOK(payment.amount)}
+                            {formatNOK(d.amount)}
                           </span>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {payment.category} ·{" "}
-                          {date.toLocaleDateString("nb-NO", {
-                            day: "numeric",
-                            month: "short",
-                          })}
-                          {!paid && d <= 5 && (
-                            <span className="ml-1 font-medium text-destructive">
-                              {d < 0 ? "forfalt" : d === 0 ? "i dag" : `om ${d} d`}
+                          {d.description} · sak {d.caseNo}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {d.auto && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                              <Zap className="size-3" /> Avtalegiro
                             </span>
                           )}
-                        </p>
+                          {d.urgent && !isPaid && (
+                            <span className="rounded-full bg-destructive/15 px-2 py-0.5 text-[11px] font-medium text-destructive">
+                              Hastefrist
+                            </span>
+                          )}
+                        </div>
                       </button>
                     </div>
 
-                    {(payment.kid || payment.account) && (
+                    {(d.kid || d.account) && (
                       <div className="mt-3 flex flex-wrap gap-2 pl-9">
-                        {payment.kid && (
+                        {d.kid && (
                           <CopyChip
                             label="KID"
-                            value={payment.kid}
-                            copied={copied === payment.id + "kid"}
-                            onCopy={() => copy(payment.kid!, payment.id + "kid")}
+                            value={d.kid}
+                            copied={copied === d.id + "kid"}
+                            onCopy={() => copy(d.kid, d.id + "kid")}
                           />
                         )}
-                        {payment.account && (
+                        {d.account && (
                           <CopyChip
                             label="Konto"
-                            value={payment.account}
-                            copied={copied === payment.id + "acc"}
-                            onCopy={() => copy(payment.account!, payment.id + "acc")}
+                            value={d.account}
+                            copied={copied === d.id + "acc"}
+                            onCopy={() => copy(d.account, d.id + "acc")}
                           />
                         )}
                       </div>
@@ -338,21 +351,56 @@ function Index() {
           <TabsContent value="budsjett" className="mt-5 space-y-4">
             <section className="rounded-2xl border border-border bg-card p-5">
               <div className="flex items-center gap-2 text-sm font-medium">
-                <Wallet className="size-4 text-primary" /> Månedsbudsjett
+                <Wallet className="size-4 text-primary" />
+                <span className="capitalize">{monthLabel(current)}</span>
               </div>
+              <dl className="mt-4 space-y-2 text-sm">
+                <Row label="Bruttolønn" value={formatNOK(meta.brutto)} />
+                <Row label="Skattetrekk" value={formatNOK(meta.skatt)} />
+                <Row label="Utleggstrekk (Namsfogden)" value={formatNOK(meta.utleggstrekk)} />
+                <Row label="Netto disponibelt" value={formatNOK(res.netto)} strong />
+                <div className="h-px bg-border" />
+                <Row label="Faste utgifter" value={formatNOK(-res.faste)} />
+                <Row label="Engangs" value={formatNOK(-res.engangs)} />
+                <Row label="Gjeldsnedbetaling" value={formatNOK(-res.gjeld)} />
+                <div className="h-px bg-border" />
+                <Row label="Månedens resultat" value={formatNOK(res.resultat)} strong />
+              </dl>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-5">
+              <h2 className="text-sm font-medium">Faste utgifter</h2>
+              <dl className="mt-3 space-y-2 text-sm">
+                {FASTE.map((f) => (
+                  <Row key={f.name} label={f.name} value={formatNOK(f.amount)} />
+                ))}
+                <Row label="Sum faste" value={formatNOK(fasteSum())} strong />
+              </dl>
+              {engangsFor(current).length > 0 && (
+                <>
+                  <h2 className="mt-5 text-sm font-medium">Engangsutgifter</h2>
+                  <dl className="mt-3 space-y-2 text-sm">
+                    {engangsFor(current).map((e) => (
+                      <Row key={e.name} label={e.name} value={formatNOK(e.amount)} />
+                    ))}
+                  </dl>
+                </>
+              )}
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-5">
+              <h2 className="text-sm font-medium">Gjeld nedbetalt</h2>
               <p className="mt-3 text-3xl font-semibold tabular-nums">
-                {formatNOK(leftOfIncome)}
+                {formatNOK(totalPaid)}
               </p>
               <p className="text-sm text-muted-foreground">
-                igjen av {formatNOK(settings.income)} etter faste utgifter
+                av {formatNOK(totalPlan)} totalt (inkl. lønnstrekk sak{" "}
+                {LONNSTREKK_SAK.caseNo})
               </p>
               <Progress
                 className="mt-4"
-                value={settings.income ? Math.min(100, (total / settings.income) * 100) : 0}
+                value={totalPlan ? Math.min(100, (totalPaid / totalPlan) * 100) : 0}
               />
-              <p className="mt-2 text-xs text-muted-foreground">
-                Faste utgifter denne måneden: {formatNOK(total)}
-              </p>
             </section>
 
             <section className="rounded-2xl border border-border bg-card p-5">
@@ -378,29 +426,47 @@ function Index() {
                 className="mt-4 w-full"
                 onClick={() => setSettingsOpen(true)}
               >
-                Oppdater inntekt og sparing
+                Oppdater sparing
               </Button>
             </section>
           </TabsContent>
 
-          <TabsContent value="grafer" className="mt-5">
+          <TabsContent value="grafer" className="mt-5 space-y-4">
             <section className="rounded-2xl border border-border bg-card p-5">
-              <h2 className="text-sm font-medium">Betalt siste 6 måneder</h2>
-              <div className="mt-4 h-64 w-full">
+              <h2 className="text-sm font-medium">Gjeldsnedbetaling per måned</h2>
+              <div className="mt-4 h-56 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
                     <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
-                    <Tooltip
-                      formatter={(v: number) => formatNOK(v)}
-                      cursor={{ opacity: 0.1 }}
-                    />
-                    <Bar dataKey="betalt" fill="var(--color-chart-2)" radius={[6, 6, 0, 0]} />
+                    <Tooltip formatter={(v: number) => formatNOK(v)} cursor={{ opacity: 0.1 }} />
+                    <Bar dataKey="gjeld" fill="var(--color-chart-2)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </section>
+
+            <section className="rounded-2xl border border-border bg-card p-5">
+              <h2 className="text-sm font-medium">Utgående balanse (buffer)</h2>
+              <div className="mt-4 h-56 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={balanceData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.2} />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={12} />
+                    <Tooltip formatter={(v: number) => formatNOK(v)} cursor={{ opacity: 0.1 }} />
+                    <Line
+                      type="monotone"
+                      dataKey="balanse"
+                      stroke="var(--color-chart-1)"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
               <p className="mt-3 text-xs text-muted-foreground">
-                Søylene viser hvor mye du har huket av som betalt hver måned.
+                Basert på budsjettet i regnearket: netto lønn minus faste, engangs og
+                gjeldsnedbetaling.
               </p>
             </section>
           </TabsContent>
@@ -417,7 +483,7 @@ function Index() {
               setDialogOpen(true);
             }}
           >
-            <Plus className="size-4" /> Ny betaling
+            <Plus className="size-4" /> Legg til krav i {monthLabel(current).split(" ")[0]}
           </Button>
         </div>
       </div>
@@ -425,15 +491,16 @@ function Index() {
       <PaymentDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+        month={current}
         editing={editing}
-        onSave={(p) =>
-          updatePayments(
-            payments.some((x) => x.id === p.id)
-              ? payments.map((x) => (x.id === p.id ? p : x))
-              : [...payments, p],
+        onSave={(d) =>
+          updateExtra(
+            extra.some((x) => x.id === d.id)
+              ? extra.map((x) => (x.id === d.id ? d : x))
+              : [...extra, d],
           )
         }
-        onDelete={(id) => updatePayments(payments.filter((x) => x.id !== id))}
+        onDelete={(id) => updateExtra(extra.filter((x) => x.id !== id))}
       />
 
       <SettingsDialog
@@ -442,6 +509,25 @@ function Index() {
         settings={settings}
         onSave={updateSettings}
       />
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  strong,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className={`text-muted-foreground ${strong ? "font-medium text-foreground" : ""}`}>
+        {label}
+      </dt>
+      <dd className={`tabular-nums ${strong ? "font-semibold" : ""}`}>{value}</dd>
     </div>
   );
 }
