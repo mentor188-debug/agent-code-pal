@@ -14,7 +14,7 @@ export function InstallPrompt() {
     if (localStorage.getItem(STORAGE_KEY)) return;
 
     const ua = window.navigator.userAgent.toLowerCase();
-    const ios = /iphone|ipad|ipod/.test(ua) && !window.MSStream;
+    const ios = /iphone|ipad|ipod/.test(ua);
     setIsIOS(ios);
 
     const handler = (e: Event) => {
