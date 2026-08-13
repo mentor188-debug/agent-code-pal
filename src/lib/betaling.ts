@@ -37,7 +37,7 @@ export const loadSettings = () => ({
 export const saveSettings = (v: Settings) =>
   window.localStorage.setItem(KEY_SETTINGS, JSON.stringify(v));
 
-export const MONTH_KEYS = MONTHS.map((m) => m.key);
+export const MONTH_KEYS: string[] = MONTHS.map((m) => m.key);
 
 export function monthMeta(key: string) {
   return MONTHS.find((m) => m.key === key) ?? MONTHS[0];
