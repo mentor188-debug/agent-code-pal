@@ -80,8 +80,13 @@ export function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+function parseKey(key: string): [number, number] {
+  const parts = key.split("-");
+  return [Number(parts[0]), Number(parts[1])];
+}
+
 export function monthLabel(key: string) {
-  const [y, m] = key.split("-").map(Number);
+  const [y, m] = parseKey(key);
   return new Date(y, m - 1, 1).toLocaleDateString("nb-NO", {
     month: "long",
     year: "numeric",
@@ -89,17 +94,17 @@ export function monthLabel(key: string) {
 }
 
 export function shortMonthLabel(key: string) {
-  const [y, m] = key.split("-").map(Number);
+  const [y, m] = parseKey(key);
   return new Date(y, m - 1, 1).toLocaleDateString("nb-NO", { month: "short" });
 }
 
 export function addMonths(key: string, delta: number) {
-  const [y, m] = key.split("-").map(Number);
+  const [y, m] = parseKey(key);
   return monthKey(new Date(y, m - 1 + delta, 1));
 }
 
 export function dueDateFor(payment: Payment, key: string) {
-  const [y, m] = key.split("-").map(Number);
+  const [y, m] = parseKey(key);
   const lastDay = new Date(y, m, 0).getDate();
   return new Date(y, m - 1, Math.min(payment.dueDay, lastDay));
 }
