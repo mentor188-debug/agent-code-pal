@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { Settings } from "@/lib/betaling";
+import { notificationPermission, requestNotificationPermission } from "@/lib/varsler";
 
 type Props = {
   open: boolean;
@@ -59,6 +60,45 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
                 inputMode="decimal"
                 value={draft.saved ? String(draft.saved) : ""}
                 onChange={(e) => setDraft({ ...draft, saved: num(e.target.value) })}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-border px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">Påminnelser før forfall</p>
+                <p className="text-xs text-muted-foreground">
+                  {permission === "denied"
+                    ? "Varsler er blokkert i nettleseren"
+                    : "Varsel når en betaling nærmer seg"}
+                </p>
+              </div>
+              <Switch
+                checked={draft.notify}
+                disabled={permission === "unsupported" || permission === "denied"}
+                onCheckedChange={async (v) => {
+                  if (v) {
+                    const res = await requestNotificationPermission();
+                    setPermission(notificationPermission());
+                    if (res !== "granted") return;
+                  }
+                  setDraft((d) => ({ ...d, notify: v }));
+                }}
+              />
+            </div>
+            <div className="mt-3 grid gap-2">
+              <Label htmlFor="reminderDays">Varsle antall dager før forfall</Label>
+              <Input
+                id="reminderDays"
+                inputMode="numeric"
+                value={String(draft.reminderDays)}
+                onChange={(e) =>
+                  setDraft({
+                    ...draft,
+                    reminderDays: Math.min(31, Math.max(0, Math.round(num(e.target.value)))),
+                  })
+                }
               />
             </div>
           </div>
