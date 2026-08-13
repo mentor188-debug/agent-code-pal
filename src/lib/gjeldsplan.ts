@@ -23,10 +23,10 @@ export const MONTHS = [
 ] as const;
 
 export const FASTE = [
-  { name: "Levepenger", amount: 5000 },
-  { name: "Billån (12,26 % – refinansier når fila er ren)", amount: 3548 },
-  { name: "Lånekassen", amount: 1800 },
-  { name: "Tryg", amount: 2280 },
+  { name: "Levepenger", amount: 5000, day: 1 },
+  { name: "Billån (12,26 % – refinansier når fila er ren)", amount: 3548, day: 20 },
+  { name: "Lånekassen", amount: 1800, day: 20 },
+  { name: "Tryg forsikring", amount: 2280, day: 3 },
 ] as const;
 
 export const ENGANGS: Record<string, { name: string; amount: number }[]> = {
