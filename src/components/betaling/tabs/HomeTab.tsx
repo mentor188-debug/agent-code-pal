@@ -1,8 +1,10 @@
 import { AlertTriangle, BarChart3, CalendarDays, ChevronRight, Clock } from "lucide-react";
 import { Avatar, Card, SectionTitle } from "@/components/betaling/Bits";
 import { InstallPrompt } from "@/components/betaling/InstallPrompt";
+import { ReminderBanner } from "@/components/betaling/ReminderBanner";
 import { formatNOK } from "@/lib/betaling";
 import type { AgendaItem } from "@/lib/dager";
+import type { Reminder } from "@/lib/varsler";
 
 export function HomeTab({
   daysLeft,
@@ -11,6 +13,7 @@ export function HomeTab({
   total,
   urgent,
   upcoming,
+  reminders,
   onGo,
 }: {
   daysLeft: number;
@@ -19,6 +22,7 @@ export function HomeTab({
   total: number;
   urgent: AgendaItem[];
   upcoming: AgendaItem[];
+  reminders: Reminder[];
   onGo: (tab: "kalender" | "gjeld" | "budsjett") => void;
 }) {
   const pct = total ? Math.min(100, (paid / total) * 100) : 0;
