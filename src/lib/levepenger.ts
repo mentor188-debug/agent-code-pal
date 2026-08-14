@@ -40,3 +40,31 @@ export function costsFor(month: string, costs: LiveCost[]) {
 export function spentFor(month: string, costs: LiveCost[]) {
   return costsFor(month, costs).reduce((s, c) => s + c.amount, 0);
 }
+
+/**
+ * Ubrukt (eller overforbrukt) levepenger fra tidligere måneder, rullert fram
+ * til `month`. Kun måneder som allerede er påbegynt teller med, slik at
+ * framtidige måneder ikke «arver» budsjett som ikke er brukt ennå.
+ */
+export function carryOverFor(
+  month: string,
+  monthKeys: string[],
+  costs: LiveCost[],
+  budgets: Record<string, number>,
+  today: string,
+) {
+  return monthKeys
+    .filter((k) => k < month && k < today)
+    .reduce((sum, k) => sum + budgetFor(k, budgets) - spentFor(k, costs), 0);
+}
+
+/** Tilgjengelig denne måneden = månedsbudsjett + overført saldo. */
+export function availableFor(
+  month: string,
+  monthKeys: string[],
+  costs: LiveCost[],
+  budgets: Record<string, number>,
+  today: string,
+) {
+  return budgetFor(month, budgets) + carryOverFor(month, monthKeys, costs, budgets, today);
+}

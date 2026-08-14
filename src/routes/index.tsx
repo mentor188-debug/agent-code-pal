@@ -16,6 +16,7 @@ import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from 
 import { dueReminders, fireReminders } from "@/lib/varsler";
 import {
   budgetFor,
+  carryOverFor,
   costsFor,
   loadBudgets,
   loadCosts,
@@ -94,6 +95,7 @@ function Index() {
 
   const meta = monthMeta(current);
   const leveBudget = budgetFor(current, liveBudgets);
+  const leveCarry = carryOverFor(current, MONTH_KEYS, liveCosts, liveBudgets, currentMonthKey());
   const leveCosts = costsFor(current, liveCosts);
   const res = monthResult(current, extra, leveBudget);
 
@@ -320,6 +322,7 @@ function Index() {
             label={shortMonthLabel}
             longLabel={monthLabel(current)}
             budget={leveBudget}
+            carry={leveCarry}
             onBudget={(v) => {
               const next = { ...liveBudgets, [current]: v };
               setLiveBudgets(next);
