@@ -108,6 +108,23 @@ export function LevepengerTab({
           )}
         </div>
 
+        {status.level !== "ok" && (
+          <div
+            className={`mt-4 flex items-start gap-2 rounded-lg p-3 text-sm ${
+              status.level === "over"
+                ? "bg-destructive/15 text-destructive"
+                : "bg-amber-500/15 text-amber-500"
+            }`}
+          >
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <p>
+              {status.level === "over"
+                ? `Levepengene er brukt opp – ${formatNOK(Math.abs(left))} over budsjettet.`
+                : `Du har brukt ${status.pct} % av levepengene (terskel ${threshold} %). Kun ${formatNOK(left)} igjen.`}
+            </p>
+          </div>
+        )}
+
         {editBudget && (
           <div className="mt-4 flex items-end gap-2">
             <div className="grid flex-1 gap-2">
