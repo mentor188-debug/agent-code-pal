@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import type { Settings } from "@/lib/betaling";
 import { notificationPermission, requestNotificationPermission } from "@/lib/varsler";
 import { SyncCard } from "@/components/betaling/SyncCard";
+import { BankCard } from "@/components/betaling/BankCard";
 
 type Props = {
   open: boolean;
