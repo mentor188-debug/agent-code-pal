@@ -1,6 +1,7 @@
-import { SquarePen } from "lucide-react";
+import { Plus, SquarePen } from "lucide-react";
 import { Avatar, Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
+import type { BudgetItem } from "@/lib/budsjett";
 
 export function BudsjettTab({
   months,
@@ -13,7 +14,11 @@ export function BudsjettTab({
   engangs,
   gjeld,
   levepenger,
-  onEdit,
+  onEditIncome,
+  onEditFast,
+  onAddFast,
+  onEditEngangs,
+  onAddEngangs,
 }: {
   months: string[];
   current: string;
@@ -21,11 +26,15 @@ export function BudsjettTab({
   label: (m: string) => string;
   longLabel: string;
   meta: { brutto: number; skatt: number; utleggstrekk: number; netto: number };
-  faste: { name: string; amount: number }[];
-  engangs: { name: string; amount: number }[];
+  faste: BudgetItem[];
+  engangs: BudgetItem[];
   gjeld: number;
   levepenger: number;
-  onEdit: () => void;
+  onEditIncome: () => void;
+  onEditFast: (item: BudgetItem) => void;
+  onAddFast: () => void;
+  onEditEngangs: (item: BudgetItem) => void;
+  onAddEngangs: () => void;
 }) {
   const fasteSum = faste.reduce((s, f) => s + f.amount, 0);
   const engangsSum = engangs.reduce((s, e) => s + e.amount, 0);
@@ -50,7 +59,7 @@ export function BudsjettTab({
           <p className="text-sm capitalize text-muted-foreground">{longLabel}</p>
           <button
             type="button"
-            onClick={onEdit}
+            onClick={onEditIncome}
             className="flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
           >
             <SquarePen className="size-3.5" /> Rediger
@@ -92,35 +101,31 @@ export function BudsjettTab({
         </ul>
       </Card>
 
-      <SectionTitle>Faste utgifter</SectionTitle>
+      <div className="flex items-center justify-between gap-2">
+        <SectionTitle>Faste utgifter</SectionTitle>
+        <AddButton onClick={onAddFast} />
+      </div>
       <div className="space-y-3">
         {faste.map((f) => (
-          <Card key={f.name}>
-            <div className="flex items-center gap-3">
-              <Avatar name={f.name} />
-              <p className="min-w-0 flex-1 truncate font-semibold">{f.name.split(" (")[0]}</p>
-              <span className="shrink-0 font-bold tabular-nums">{formatNOK(f.amount)}</span>
-            </div>
-          </Card>
+          <ItemCard key={f.id} item={f} sub={`Forfaller den ${f.day}.`} onEdit={() => onEditFast(f)} />
         ))}
+        {faste.length === 0 && (
+          <p className="px-1 text-sm text-muted-foreground">Ingen faste utgifter lagt inn.</p>
+        )}
       </div>
 
-      {engangs.length > 0 && (
-        <>
-          <SectionTitle>Engangsutgifter</SectionTitle>
-          <div className="space-y-3">
-            {engangs.map((e) => (
-              <Card key={e.name}>
-                <div className="flex items-center gap-3">
-                  <Avatar name={e.name} />
-                  <p className="min-w-0 flex-1 truncate font-semibold">{e.name}</p>
-                  <span className="shrink-0 font-bold tabular-nums">{formatNOK(e.amount)}</span>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </>
-      )}
+      <div className="flex items-center justify-between gap-2">
+        <SectionTitle>Engangsutgifter</SectionTitle>
+        <AddButton onClick={onAddEngangs} />
+      </div>
+      <div className="space-y-3">
+        {engangs.map((e) => (
+          <ItemCard key={e.id} item={e} onEdit={() => onEditEngangs(e)} />
+        ))}
+        {engangs.length === 0 && (
+          <p className="px-1 text-sm text-muted-foreground">Ingen engangsutgifter denne måneden.</p>
+        )}
+      </div>
 
       <Card className="p-5">
         <div className="flex items-baseline justify-between">
@@ -133,6 +138,42 @@ export function BudsjettTab({
         </div>
       </Card>
     </div>
+  );
+}
+
+function AddButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary"
+    >
+      <Plus className="size-3.5" /> Legg til
+    </button>
+  );
+}
+
+function ItemCard({
+  item,
+  sub,
+  onEdit,
+}: {
+  item: BudgetItem;
+  sub?: string;
+  onEdit: () => void;
+}) {
+  return (
+    <Card>
+      <button type="button" onClick={onEdit} className="flex w-full items-center gap-3 text-left">
+        <Avatar name={item.name} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-semibold">{item.name.split(" (")[0]}</span>
+          {sub && <span className="block text-xs text-muted-foreground">{sub}</span>}
+        </span>
+        <span className="shrink-0 font-bold tabular-nums">{formatNOK(item.amount)}</span>
+        <SquarePen className="size-4 shrink-0 text-muted-foreground" />
+      </button>
+    </Card>
   );
 }
 
