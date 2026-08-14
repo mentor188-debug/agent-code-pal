@@ -31,8 +31,14 @@ export const fetchBankTransactions = createServerFn({ method: "POST" })
       accountUid: string;
       dateFrom?: string;
       dateTo?: string;
+      continuationKey?: string;
     }) => data,
   )
   .handler(async ({ data }) =>
-    getTransactions(data.accountUid, data.dateFrom, data.dateTo),
+    getTransactions(
+      data.accountUid,
+      data.dateFrom,
+      data.dateTo,
+      data.continuationKey,
+    ),
   );
