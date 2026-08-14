@@ -146,6 +146,33 @@ export function LevepengerTab({
             </Button>
           </div>
         )}
+
+        <div className="mt-4 border-t border-border pt-3">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Bell className="size-3.5" /> Varsle meg når jeg har brukt
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {TERSKEL_VALG.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => onThreshold(t)}
+                aria-pressed={threshold === t}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  threshold === t
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {t} %
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Gjelder <span className="capitalize">{longLabel}</span>. Slå på systemvarsler i
+            Innstillinger for å få beskjed utenfor appen.
+          </p>
+        </div>
       </Card>
 
       <Card>
