@@ -227,10 +227,18 @@ export function BankCard() {
       }[] = [];
       for (const acc of session.accounts) {
         let continuationKey: string | null | undefined = undefined;
+        let pages = 0;
         do {
-          const result = await fetchBankTransactions({
-            data: { accountUid: acc.uid, dateFrom, dateTo },
-          });
+          const result: Awaited<ReturnType<typeof fetchBankTransactions>> =
+            await fetchBankTransactions({
+              data: {
+                accountUid: acc.uid,
+                dateFrom,
+                dateTo,
+                ...(continuationKey ? { continuationKey } : {}),
+              },
+            });
+          pages += 1;
           for (const tx of result.transactions ?? []) {
             const entry: {
               amount: number;
@@ -255,7 +263,7 @@ export function BankCard() {
             allTx.push(entry);
           }
           continuationKey = result.continuation_key;
-        } while (continuationKey);
+        } while (continuationKey && pages < 20);
       }
 
       // Match mot gjeldsposter
@@ -273,7 +281,14 @@ export function BankCard() {
         toast.info("Ingen nye samsvarende betalinger funnet");
       }
     } catch (e) {
-      toast.error("Synk feilet", { description: (e as Error).message });
+      const msg = (e as Error).message ?? "Ukjent feil";
+      const expired = /401|403|invalid|expired|session/i.test(msg);
+      toast.error("Synk feilet", {
+        description: expired
+          ? "Banksamtykket ser ut til å ha utløpt. Koble til banken på nytt."
+          : msg,
+      });
+      setMatchResult(msg);
     } finally {
       setSyncing(false);
     }

@@ -154,10 +154,12 @@ export async function getTransactions(
   accountUid: string,
   dateFrom?: string,
   dateTo?: string,
+  continuationKey?: string,
 ): Promise<TransactionsResponse> {
   const params = new URLSearchParams();
   if (dateFrom) params.set("date_from", dateFrom);
   if (dateTo) params.set("date_to", dateTo);
+  if (continuationKey) params.set("continuation_key", continuationKey);
   const qs = params.toString();
   return ebFetch(`/accounts/${accountUid}/transactions${qs ? `?${qs}` : ""}`);
 }
