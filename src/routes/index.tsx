@@ -96,7 +96,6 @@ function Index() {
   const meta = monthMeta(current);
   const leveBudget = budgetFor(current, liveBudgets);
   const leveCosts = costsFor(current, liveCosts);
-  const leveSpent = spentFor(current, liveCosts);
   const res = monthResult(current, extra, leveBudget);
 
   const agenda = useMemo<AgendaItem[]>(() => {
