@@ -11,6 +11,7 @@ import { GjeldTab, type CreditorSummary } from "@/components/betaling/tabs/Gjeld
 import { BudsjettTab } from "@/components/betaling/tabs/BudsjettTab";
 import { LevepengerTab } from "@/components/betaling/tabs/LevepengerTab";
 import { SparingTab } from "@/components/betaling/tabs/SparingTab";
+import { SaldoTab } from "@/components/betaling/tabs/SaldoTab";
 import { LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
 import { dueReminders, fireOnce, fireReminders } from "@/lib/varsler";
@@ -411,6 +412,22 @@ function Index() {
               setLiveCosts(next);
               saveCosts(next);
             }}
+          />
+        )}
+
+        {tab === "saldo" && (
+          <SaldoTab
+            months={MONTH_KEYS}
+            current={current}
+            onMonth={setCurrent}
+            label={shortMonthLabel}
+            longLabel={monthLabel(current)}
+            netto={meta.netto}
+            items={agenda}
+            paidIds={paid}
+            leveAvailable={leveBudget + leveCarry}
+            leveSpent={leveCosts.reduce((s, c) => s + c.amount, 0)}
+            onToggle={togglePaid}
           />
         )}
 
