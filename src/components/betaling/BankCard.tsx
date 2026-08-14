@@ -299,7 +299,9 @@ export function BankCard() {
 
         {/* Kontoer */}
         <div className="mt-3 space-y-1.5">
-          {session.accounts.map((acc) => (
+          {session.accounts.map((acc) => {
+            const bal = balances[acc.uid]?.[0];
+            return (
             <div
               key={acc.uid}
               className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs"
@@ -307,13 +309,14 @@ export function BankCard() {
               <span className="truncate text-muted-foreground">
                 {acc.name || acc.iban || acc.uid.slice(0, 8)}
               </span>
-              {balances[acc.uid]?.[0]?.amount && (
+              {bal?.amount && (
                 <span className="font-medium">
-                  {formatNOK(parseFloat(balances[acc.uid][0].amount))}
+                  {formatNOK(parseFloat(bal.amount))}
                 </span>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Sync-knapper */}
