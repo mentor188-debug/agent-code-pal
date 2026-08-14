@@ -46,6 +46,8 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
         </DialogHeader>
 
         <div className="grid gap-4">
+          <SyncCard />
+
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label htmlFor="goal">Sparemål (kr)</Label>
