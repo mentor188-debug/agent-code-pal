@@ -21,7 +21,6 @@ import {
   loadCosts,
   saveBudgets,
   saveCosts,
-  spentFor,
   type LiveCost,
 } from "@/lib/levepenger";
 import {
