@@ -71,13 +71,21 @@ export function isEmptySnapshot(s: Snapshot) {
   return Object.keys(s).length === 0;
 }
 
+/**
+ * Skriver kun nøkler som faktisk finnes i skyen. Mangler en nøkkel (f.eks. fordi
+ * skyen ble lagret før modulen fantes), beholdes den lokale verdien – aldri slett.
+ */
 export function applySnapshot(s: Snapshot, keys: readonly SyncKey[] = loadSyncChoice()) {
   if (typeof window === "undefined") return;
   for (const key of keys) {
     const value = s[key];
-    if (value == null) window.localStorage.removeItem(key);
-    else window.localStorage.setItem(key, value);
+    if (value != null) window.localStorage.setItem(key, value);
   }
+}
+
+/** Skyen er sannheten kun for det den faktisk har; lokalt fyller inn resten. */
+export function mergeSnapshots(remote: Snapshot, local: Snapshot): Snapshot {
+  return { ...local, ...remote };
 }
 
 export async function pushState(userId: string): Promise<string> {
