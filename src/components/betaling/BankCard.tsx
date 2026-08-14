@@ -485,8 +485,69 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
         </div>
 
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Synk henter kun transaksjoner for {monthLabel} og huker av krav i den måneden.
+          Synk henter kun transaksjoner for {monthLabel}. Ingenting huk es av før du
+          har godkjent forslagene.
         </p>
+
+        {/* Synksjekk – godkjenning før endring */}
+        {pending.length > 0 && (
+          <div className="mt-3 rounded-xl border border-primary/40 bg-primary/5 p-3">
+            <p className="text-xs font-semibold">
+              Sjekk før synk · {pending.length} forslag
+            </p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {txCount} transaksjon(er) lest for {monthLabel}. Velg hva som skal
+              huk es av.
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {pending.map((m) => {
+                const on = selected.includes(m.debtId);
+                return (
+                  <button
+                    key={m.debtId}
+                    type="button"
+                    onClick={() =>
+                      setSelected((prev) =>
+                        on ? prev.filter((id) => id !== m.debtId) : [...prev, m.debtId],
+                      )
+                    }
+                    className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition ${
+                      on ? "bg-primary/15" : "bg-muted/40 opacity-60"
+                    }`}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-xs font-medium">
+                        {m.creditor}
+                      </span>
+                      <span className="block truncate text-[11px] text-muted-foreground">
+                        {m.txDate ? `${m.txDate} · ` : ""}match på {m.reason}
+                        {m.txText ? ` · ${m.txText}` : ""}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-right">
+                      <span className="block text-xs font-semibold">
+                        {formatNOK(m.txAmount)}
+                      </span>
+                      {Math.abs(m.txAmount - m.debtAmount) >= 1 && (
+                        <span className="block text-[10px] text-muted-foreground">
+                          krav {formatNOK(m.debtAmount)}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button variant="ghost" size="sm" onClick={cancelSync}>
+                Avbryt
+              </Button>
+              <Button size="sm" onClick={confirmSync}>
+                Godkjenn ({selected.length})
+              </Button>
+            </div>
+          </div>
+        )}
 
         {matchResult && (
           <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -494,6 +555,62 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
             {matchResult}
           </p>
         )}
+
+        {/* Synklogg */}
+        <button
+          type="button"
+          onClick={() => setShowLog((v) => !v)}
+          className="mt-3 flex w-full items-center gap-1.5 text-left text-xs font-medium text-primary"
+        >
+          <History className="h-3.5 w-3.5" />
+          {showLog ? "Skjul synklogg" : `Synklogg (${log.length})`}
+        </button>
+
+        {showLog && (
+          <div className="mt-2 space-y-1.5">
+            {log.length === 0 && (
+              <p className="text-[11px] text-muted-foreground">Ingen synk kjørt ennå.</p>
+            )}
+            {log.map((e) => (
+              <div
+                key={e.at}
+                className="rounded-lg bg-muted/40 px-3 py-2 text-[11px]"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium">
+                    {new Date(e.at).toLocaleString("nb-NO")}
+                  </span>
+                  <span
+                    className={
+                      e.status === "ok"
+                        ? "text-primary"
+                        : e.status === "feil"
+                          ? "text-destructive"
+                          : "text-muted-foreground"
+                    }
+                  >
+                    {e.status}
+                  </span>
+                </div>
+                <p className="text-muted-foreground">
+                  {e.month} · {e.txCount} tx · {e.foundCount} forslag ·{" "}
+                  {e.appliedCount} godkjent
+                </p>
+                {e.note && <p className="truncate text-muted-foreground">{e.note}</p>}
+              </div>
+            ))}
+            {log.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setLog(clearSyncLog())}
+                className="text-[11px] text-muted-foreground underline"
+              >
+                Tøm logg
+              </button>
+            )}
+          </div>
+        )}
+
       </div>
     );
   }
