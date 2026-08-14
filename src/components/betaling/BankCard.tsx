@@ -104,12 +104,13 @@ export function BankCard() {
         const newSession: BankSession = {
           sessionId: result.session_id,
           bankName: selectedBank || "Bank",
-          accounts: (result.accounts ?? []).map((a) => ({
-            uid: a.uid,
-            iban: a.account_id?.iban,
-            name: a.name,
-            currency: a.currency,
-          })),
+          accounts: (result.accounts ?? []).map((a) => {
+            const acc: BankSession["accounts"][number] = { uid: a.uid };
+            if (a.account_id?.iban) acc.iban = a.account_id.iban;
+            if (a.name) acc.name = a.name;
+            if (a.currency) acc.currency = a.currency;
+            return acc;
+          }),
           validUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
           connectedAt: new Date().toISOString(),
         };
@@ -132,7 +133,13 @@ export function BankCard() {
     (async () => {
       try {
         const result = await listNorwegianBanks();
-        setBanks(result.map((b) => ({ name: b.name, logo: b.logo })));
+        setBanks(
+          result.map((b) => {
+            const item: { name: string; logo?: string } = { name: b.name };
+            if (b.logo) item.logo = b.logo;
+            return item;
+          }),
+        );
         setBanksLoaded(true);
       } catch {
         /* skjult — prøv igjen ved klikk */
@@ -177,11 +184,14 @@ export function BankCard() {
       const newBalances: typeof balances = {};
       for (const acc of session.accounts) {
         const result = await fetchBankBalances({ data: { accountUid: acc.uid } });
-        newBalances[acc.uid] = (result.balances ?? []).map((b) => ({
-          name: b.name,
-          amount: b.balance_amount.amount,
-          currency: b.balance_amount.currency,
-        }));
+        newBalances[acc.uid] = (result.balances ?? []).map((b) => {
+          const item: { name?: string; amount: string; currency: string } = {
+            amount: b.balance_amount.amount,
+            currency: b.balance_amount.currency,
+          };
+          if (b.name) item.name = b.name;
+          return item;
+        });
       }
       setBalances(newBalances);
       toast.success("Saldo oppdatert");
@@ -215,19 +225,27 @@ export function BankCard() {
             data: { accountUid: acc.uid, dateFrom, dateTo },
           });
           for (const tx of result.transactions ?? []) {
-            allTx.push({
+            const entry: {
+              amount: number;
+              direction: "DBIT" | "CRDT";
+              date?: string;
+              text?: string;
+              ref?: string;
+            } = {
               amount: parseFloat(tx.transaction_amount.amount),
               direction: tx.credit_debit_indicator,
-              date: tx.booking_date,
-              text: [
-                tx.creditor?.name,
-                tx.debtor?.name,
-                ...(tx.remittance_information ?? []),
-              ]
-                .filter(Boolean)
-                .join(" "),
-              ref: tx.reference_number,
-            });
+            };
+            if (tx.booking_date) entry.date = tx.booking_date;
+            const text = [
+              tx.creditor?.name,
+              tx.debtor?.name,
+              ...(tx.remittance_information ?? []),
+            ]
+              .filter(Boolean)
+              .join(" ");
+            if (text) entry.text = text;
+            if (tx.reference_number) entry.ref = tx.reference_number;
+            allTx.push(entry);
           }
           continuationKey = result.continuation_key;
         } while (continuationKey);
