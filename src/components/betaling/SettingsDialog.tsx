@@ -20,9 +20,11 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   settings: Settings;
   onSave: (s: Settings) => void;
+  month: string;
+  monthLabel: string;
 };
 
-export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) {
+export function SettingsDialog({ open, onOpenChange, settings, onSave, month, monthLabel }: Props) {
   const [draft, setDraft] = useState<Settings>(settings);
   const [pinEnabled, setPinEnabled] = useState(!!settings.pin);
   const [pinValue, setPinValue] = useState(settings.pin ?? "");
@@ -50,7 +52,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
         <div className="grid gap-4 overflow-y-auto overscroll-contain px-5 py-4 [-webkit-overflow-scrolling:touch]">
           <SyncCard />
 
-          <BankCard />
+          <BankCard month={month} monthLabel={monthLabel} />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-2">

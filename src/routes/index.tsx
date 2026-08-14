@@ -486,6 +486,8 @@ function Index() {
         onOpenChange={setSettingsOpen}
         settings={settings}
         onSave={updateSettings}
+        month={current}
+        monthLabel={monthLabel(current)}
       />
 
       <IncomeDialog
