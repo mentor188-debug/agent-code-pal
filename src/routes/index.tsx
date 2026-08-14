@@ -16,6 +16,7 @@ import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from 
 import { dueReminders, fireReminders } from "@/lib/varsler";
 import {
   budgetFor,
+  carryOverFor,
   costsFor,
   loadBudgets,
   loadCosts,
