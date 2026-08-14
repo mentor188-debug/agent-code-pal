@@ -11,9 +11,26 @@ import { GjeldTab, type CreditorSummary } from "@/components/betaling/tabs/Gjeld
 import { BudsjettTab } from "@/components/betaling/tabs/BudsjettTab";
 import { LevepengerTab } from "@/components/betaling/tabs/LevepengerTab";
 import { SparingTab } from "@/components/betaling/tabs/SparingTab";
-import { FASTE, LONNSTREKK_SAK } from "@/lib/gjeldsplan";
+import { LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
 import { dueReminders, fireOnce, fireReminders } from "@/lib/varsler";
+import { BudgetItemDialog } from "@/components/betaling/BudgetItemDialog";
+import { IncomeDialog } from "@/components/betaling/IncomeDialog";
+import {
+  defaultBudget,
+  engangsOf,
+  fasteSumOf,
+  incomeFor,
+  loadBudget,
+  removeEngangs,
+  removeFast,
+  saveBudget,
+  setIncome,
+  upsertEngangs,
+  upsertFast,
+  type BudgetData,
+  type BudgetItem,
+} from "@/lib/budsjett";
 import {
   budgetFor,
   carryOverFor,
