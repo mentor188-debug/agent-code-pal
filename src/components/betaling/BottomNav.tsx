@@ -24,12 +24,15 @@ export function BottomNav({ value, onChange }: { value: TabKey; onChange: (t: Ta
                 type="button"
                 onClick={() => onChange(key)}
                 aria-current={active ? "page" : undefined}
-                className={`flex w-full flex-col items-center gap-1 py-2.5 text-[11px] transition-colors ${
+                className={`relative flex min-h-14 w-full flex-col items-center justify-center gap-1 py-2 text-[10.5px] leading-none transition-colors active:opacity-70 ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <Icon className="size-5" strokeWidth={active ? 2.4 : 1.8} />
-                {label}
+                {active && (
+                  <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" />
+                )}
+                <Icon className="size-[1.35rem]" strokeWidth={active ? 2.4 : 1.8} />
+                <span className="max-w-full truncate">{label}</span>
               </button>
             </li>
           );

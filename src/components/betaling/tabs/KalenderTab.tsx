@@ -48,7 +48,7 @@ export function KalenderTab({
           return (
             <Card key={i.id} className={isPaid ? "opacity-60" : ""}>
               <div className="flex items-center gap-3">
-                <div className="w-9 shrink-0 text-center">
+                <div className="w-8 shrink-0 text-center">
                   <p className="text-lg font-bold leading-none tabular-nums">{i.day}</p>
                   <p className="text-[10px] font-medium text-muted-foreground">{monthShort}</p>
                 </div>
@@ -58,7 +58,7 @@ export function KalenderTab({
                   onClick={() => onEdit(i)}
                   className="min-w-0 flex-1 text-left"
                 >
-                  <p className={`truncate font-semibold ${isPaid ? "line-through" : ""}`}>
+                  <p className={`truncate text-[15px] font-semibold ${isPaid ? "line-through" : ""}`}>
                     {i.name}
                   </p>
                   <p className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -70,13 +70,13 @@ export function KalenderTab({
                     )}
                   </p>
                 </button>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="font-semibold tabular-nums">{formatNOK(i.amount)}</span>
+                <div className="flex shrink-0 items-center gap-2.5">
+                  <span className="text-sm font-semibold tabular-nums">{formatNOK(i.amount)}</span>
                   <button
                     type="button"
                     onClick={() => onToggle(i)}
                     aria-label={isPaid ? "Marker som ubetalt" : "Marker som betalt"}
-                    className={`flex size-6 items-center justify-center rounded-full border transition-colors ${
+                    className={`flex size-8 items-center justify-center rounded-full border transition-colors active:scale-95 ${
                       isPaid ? "border-primary bg-primary text-primary-foreground" : "border-border"
                     }`}
                   >
