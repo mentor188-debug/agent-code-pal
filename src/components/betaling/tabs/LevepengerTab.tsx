@@ -14,6 +14,7 @@ export function LevepengerTab({
   label,
   longLabel,
   budget,
+  carry,
   onBudget,
   costs,
   onAdd,
@@ -25,6 +26,7 @@ export function LevepengerTab({
   label: (m: string) => string;
   longLabel: string;
   budget: number;
+  carry: number;
   onBudget: (v: number) => void;
   costs: LiveCost[];
   onAdd: (c: LiveCost) => void;
@@ -36,8 +38,9 @@ export function LevepengerTab({
   const [budgetDraft, setBudgetDraft] = useState(String(budget));
 
   const spent = costs.reduce((s, c) => s + c.amount, 0);
-  const left = budget - spent;
-  const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
+  const available = budget + carry;
+  const left = available - spent;
+  const pct = available > 0 ? Math.min(100, Math.round((spent / available) * 100)) : 0;
 
   const add = () => {
     const value = Number(amount.replace(",", ".")) || 0;
