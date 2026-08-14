@@ -370,11 +370,15 @@ function Index() {
             label={shortMonthLabel}
             longLabel={monthLabel(current)}
             meta={meta}
-            faste={FASTE.map((f) => ({ name: f.name, amount: f.amount }))}
-            engangs={engangsFor(current)}
+            faste={budget.faste}
+            engangs={engangsOf(current, budget)}
             gjeld={res.gjeld}
             levepenger={leveBudget}
-            onEdit={() => setSettingsOpen(true)}
+            onEditIncome={() => setIncomeOpen(true)}
+            onEditFast={(item) => setItemDialog({ kind: "fast", item })}
+            onAddFast={() => setItemDialog({ kind: "fast", item: null })}
+            onEditEngangs={(item) => setItemDialog({ kind: "engangs", item })}
+            onAddEngangs={() => setItemDialog({ kind: "engangs", item: null })}
           />
         )}
 
