@@ -17,7 +17,7 @@ export default defineMcp({
     acceptedAudiences: "authenticated",
   }),
   // exactOptionalPropertyTypes flags the SDK's optional outputSchema; the runtime shape is correct.
-  tools: [planOversikt, manedBudsjett, listKrav, kreditorer] as Parameters<
+  tools: [planOversikt, manedBudsjett, listKrav, kreditorer] as unknown as Parameters<
     typeof defineMcp
   >[0]["tools"],
 });
