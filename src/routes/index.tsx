@@ -472,6 +472,43 @@ function Index() {
         settings={settings}
         onSave={updateSettings}
       />
+
+      <IncomeDialog
+        open={incomeOpen}
+        onOpenChange={setIncomeOpen}
+        monthLabel={monthLabel(current)}
+        income={{ brutto: meta.brutto, skatt: meta.skatt, utleggstrekk: meta.utleggstrekk }}
+        onSave={(inc) => updateBudget(setIncome(budget, current, inc))}
+      />
+
+      <BudgetItemDialog
+        open={itemDialog !== null}
+        onOpenChange={(v) => !v && setItemDialog(null)}
+        title={
+          itemDialog?.kind === "engangs"
+            ? itemDialog.item
+              ? "Rediger engangsutgift"
+              : "Ny engangsutgift"
+            : itemDialog?.item
+              ? "Rediger fast utgift"
+              : "Ny fast utgift"
+        }
+        editing={itemDialog?.item ?? null}
+        onSave={(item) =>
+          updateBudget(
+            itemDialog?.kind === "engangs"
+              ? upsertEngangs(budget, current, item)
+              : upsertFast(budget, item),
+          )
+        }
+        onDelete={(id) =>
+          updateBudget(
+            itemDialog?.kind === "engangs"
+              ? removeEngangs(budget, current, id)
+              : removeFast(budget, id),
+          )
+        }
+      />
     </div>
   );
 }
