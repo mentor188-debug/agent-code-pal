@@ -320,6 +320,7 @@ function Index() {
             label={shortMonthLabel}
             longLabel={monthLabel(current)}
             budget={leveBudget}
+            carry={leveCarry}
             onBudget={(v) => {
               const next = { ...liveBudgets, [current]: v };
               setLiveBudgets(next);

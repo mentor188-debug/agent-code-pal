@@ -81,7 +81,7 @@ export function LevepengerTab({
         >
           {formatNOK(left)}
         </p>
-        <p className="text-sm text-muted-foreground">Igjen av {formatNOK(budget)}</p>
+        <p className="text-sm text-muted-foreground">Igjen av {formatNOK(available)}</p>
 
         <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-muted">
           <div
@@ -92,6 +92,16 @@ export function LevepengerTab({
         <p className="mt-2 text-xs text-muted-foreground">
           Brukt {formatNOK(spent)} · {pct} %
         </p>
+
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <span>Månedsbudsjett {formatNOK(budget)}</span>
+          {carry !== 0 && (
+            <span className={carry < 0 ? "text-destructive" : "text-primary"}>
+              {carry > 0 ? "Overført " : "Overforbruk "}
+              {formatNOK(Math.abs(carry))} fra tidligere måneder
+            </span>
+          )}
+        </div>
 
         {editBudget && (
           <div className="mt-4 flex items-end gap-2">
