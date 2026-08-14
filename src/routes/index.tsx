@@ -94,6 +94,7 @@ function Index() {
 
   const meta = monthMeta(current);
   const leveBudget = budgetFor(current, liveBudgets);
+  const leveCarry = carryOverFor(current, MONTH_KEYS, liveCosts, liveBudgets, currentMonthKey());
   const leveCosts = costsFor(current, liveCosts);
   const res = monthResult(current, extra, leveBudget);
 
