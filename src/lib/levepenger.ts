@@ -55,7 +55,7 @@ export function carryOverFor(
 ) {
   return monthKeys
     .filter((k) => k < month && k < today)
-    .reduce((sum, k) => sum + budgetFor(k, budgets) + sum * 0 - spentFor(k, costs), 0);
+    .reduce((sum, k) => sum + budgetFor(k, budgets) - spentFor(k, costs), 0);
 }
 
 /** Tilgjengelig denne måneden = månedsbudsjett + overført saldo. */
