@@ -1,13 +1,13 @@
-import { Calendar, Home, Shield, TrendingDown, Wallet } from "lucide-react";
+import { Calendar, Home, ShoppingBasket, TrendingDown, Wallet } from "lucide-react";
 
-export type TabKey = "hjem" | "kalender" | "gjeld" | "budsjett" | "sparing";
+export type TabKey = "hjem" | "kalender" | "gjeld" | "budsjett" | "levepenger";
 
 const TABS: { key: TabKey; label: string; icon: typeof Home }[] = [
   { key: "hjem", label: "Hjem", icon: Home },
   { key: "kalender", label: "Kalender", icon: Calendar },
   { key: "gjeld", label: "Gjeld", icon: TrendingDown },
   { key: "budsjett", label: "Budsjett", icon: Wallet },
-  { key: "sparing", label: "Sparing", icon: Shield },
+  { key: "levepenger", label: "Levepenger", icon: ShoppingBasket },
 ];
 
 export function BottomNav({ value, onChange }: { value: TabKey; onChange: (t: TabKey) => void }) {

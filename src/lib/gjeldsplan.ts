@@ -22,8 +22,10 @@ export const MONTHS = [
   { key: "2027-02", brutto: 41666, skatt: -12499.8, utleggstrekk: 0, netto: 29166.2 },
 ] as const;
 
+/** Månedlig levepenger-ramme – håndteres i egen Levepenger-modul, ikke som betaling. */
+export const LEVEPENGER_BUDSJETT = 5000;
+
 export const FASTE = [
-  { name: "Levepenger", amount: 5000, day: 1 },
   { name: "Billån (12,26 % – refinansier når fila er ren)", amount: 3548, day: 20 },
   { name: "Lånekassen", amount: 1800, day: 20 },
   { name: "Tryg forsikring", amount: 2280, day: 3 },
