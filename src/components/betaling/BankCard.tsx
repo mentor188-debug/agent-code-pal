@@ -12,6 +12,13 @@ import {
 import { DEBTS, type Debt } from "@/lib/gjeldsplan";
 import { loadPaid, savePaid } from "@/lib/betaling";
 import { formatNOK } from "@/lib/betaling";
+import {
+  appendSyncLog,
+  clearSyncLog,
+  loadSyncLog,
+  type SyncLogEntry,
+} from "@/lib/banklogg";
+
 
 type BankSession = {
   sessionId: string;
