@@ -1,4 +1,4 @@
-import { DEBTS, ENGANGS, FASTE, MONTHS, type Debt } from "./gjeldsplan";
+import { DEBTS, ENGANGS, FASTE, LEVEPENGER_BUDSJETT, MONTHS, type Debt } from "./gjeldsplan";
 
 export type Settings = {
   savingsGoal: number;
@@ -85,7 +85,7 @@ export function engangsFor(key: string) {
   return ENGANGS[key] ?? [];
 }
 
-export function monthResult(key: string, extra: Debt[]) {
+export function monthResult(key: string, extra: Debt[], levepenger = LEVEPENGER_BUDSJETT) {
   const meta = monthMeta(key);
   const gjeld = debtsFor(key, extra).reduce((s, d) => s + d.amount, 0);
   const engangs = engangsFor(key).reduce((s, e) => s + e.amount, 0);
@@ -95,10 +95,11 @@ export function monthResult(key: string, extra: Debt[]) {
     faste,
     engangs,
     gjeld,
+    levepenger,
     manuelt: debtsFor(key, extra)
       .filter((d) => !d.auto)
       .reduce((s, d) => s + d.amount, 0),
-    resultat: meta.netto - faste - engangs - gjeld,
+    resultat: meta.netto - faste - engangs - gjeld - levepenger,
   };
 }
 
