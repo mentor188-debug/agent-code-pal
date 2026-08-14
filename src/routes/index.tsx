@@ -103,6 +103,12 @@ function Index() {
   const [liveCosts, setLiveCosts] = useState<LiveCost[]>([]);
   const [liveBudgets, setLiveBudgets] = useState<Record<string, number>>({});
   const [leveThresholds, setLeveThresholds] = useState<Record<string, number>>({});
+  const [budget, setBudget] = useState<BudgetData>(() => defaultBudget());
+  const [incomeOpen, setIncomeOpen] = useState(false);
+  const [itemDialog, setItemDialog] = useState<{
+    kind: "fast" | "engangs";
+    item: BudgetItem | null;
+  } | null>(null);
 
   useEffect(() => {
     const s = loadSettings();
@@ -112,12 +118,18 @@ function Index() {
     setLiveCosts(loadCosts());
     setLiveBudgets(loadBudgets());
     setLeveThresholds(loadThresholds());
+    setBudget(loadBudget());
     setSettings(s);
     setUnlocked(!s.pin);
     setReady(true);
   }, []);
 
-  const meta = monthMeta(current);
+  const updateBudget = (next: BudgetData) => {
+    setBudget(next);
+    saveBudget(next);
+  };
+
+  const meta = incomeFor(current, budget);
   const leveBudget = budgetFor(current, liveBudgets);
   const leveCarry = carryOverFor(current, MONTH_KEYS, liveCosts, liveBudgets, currentMonthKey());
   const leveCosts = costsFor(current, liveCosts);
@@ -127,7 +139,21 @@ function Index() {
     leveBudget + leveCarry,
     leveTerskel,
   );
-  const res = monthResult(current, extra, leveBudget);
+
+  const resultFor = (key: string, leve = budgetFor(key, liveBudgets)) => {
+    const inc = incomeFor(key, budget);
+    const gjeld = debtsFor(key, extra).reduce((s, d) => s + d.amount, 0);
+    const eng = engangsOf(key, budget).reduce((s, e) => s + e.amount, 0);
+    const faste = fasteSumOf(budget);
+    return {
+      netto: inc.netto,
+      faste,
+      engangs: eng,
+      gjeld,
+      resultat: inc.netto - faste - eng - gjeld - leve,
+    };
+  };
+  const res = resultFor(current, leveBudget);
 
   const agenda = useMemo<AgendaItem[]>(() => {
     const debts = debtsFor(current, extra).map((d, i) => ({
