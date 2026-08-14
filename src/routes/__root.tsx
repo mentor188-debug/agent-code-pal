@@ -132,12 +132,15 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   useEffect(() => {
+    // Ingen app-cache lenger: avregistrer gammel service worker så innhold aldri blir utdatert.
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
-        .register("/sw.js")
-        .catch((err) => console.error("Service worker registration failed:", err));
+        .getRegistrations()
+        .then((regs) => regs.forEach((r) => r.unregister()))
+        .catch(() => {});
     }
   }, []);
+
 
   return (
     <QueryClientProvider client={queryClient}>

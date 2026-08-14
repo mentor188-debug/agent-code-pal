@@ -1,57 +1,22 @@
-const CACHE_NAME = "betaling-tracker-v1";
-const STATIC_ASSETS = ["/", "/manifest.json", "/icon-192x192.png", "/icon-512x512.png"];
+// Kill-switch worker: fjerner gammel cache slik at appen alltid henter nyeste versjon.
+function isAppCache(name) {
+  return /^betaling-tracker-/.test(name) || /(^|-)precache-v\d+-|(^|-)runtime-/.test(name);
+}
 
-self.addEventListener("install", (event) => {
+self.addEventListener("install", () => self.skipWaiting());
+
+self.addEventListener("activate", (event) =>
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting()),
-  );
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
-      )
-      .then(() => self.clients.claim()),
-  );
-});
-
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  if (request.method !== "GET") return;
-
-  // Navigation requests: network first, fallback to cached shell.
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match("/")),
-    );
-    return;
-  }
-
-  // Static assets: stale-while-revalidate.
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-      return cached || fetchPromise;
-    }),
-  );
-});
+    (async () => {
+      try {
+        const names = await caches.keys();
+        await Promise.allSettled(names.filter(isAppCache).map((n) => caches.delete(n)));
+        await self.clients.claim();
+        const clients = await self.clients.matchAll({ type: "window" });
+        await Promise.allSettled(clients.map((c) => c.navigate(c.url)));
+      } finally {
+        await self.registration.unregister();
+      }
+    })(),
+  ),
+);
