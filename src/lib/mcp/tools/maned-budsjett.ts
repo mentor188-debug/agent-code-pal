@@ -1,9 +1,6 @@
-import { defineTool } from "@lovable.dev/mcp-js";
-import { ToolError, defineTool as _defineTool } from "@lovable.dev/mcp-js";
+import { ToolError, defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { ENGANGS, FASTE, debtsForMonth, monthSummary } from "../plan";
-
-void _defineTool;
 
 export default defineTool({
   name: "maned_budsjett",

@@ -80,5 +80,5 @@ export function daysUntilDebtFree(from = new Date()) {
   return Math.max(0, Math.round((target.getTime() - start) / 86400000));
 }
 
-export { MONTHS, FASTE, ENGANGS, LONNSTREKK_SAK, LEVEPENGER_BUDSJETT };
+export { DEBTS, MONTHS, FASTE, ENGANGS, LONNSTREKK_SAK, LEVEPENGER_BUDSJETT };
 export type { Debt };
