@@ -48,9 +48,11 @@ export type AgendaItem = {
   debt?: Debt;
 };
 
-export function fasteAgenda(): AgendaItem[] {
-  return FASTE.map((f) => ({
-    id: "fast-" + f.name,
+export function fasteAgenda(
+  items: readonly { id?: string; name: string; amount: number; day: number }[] = FASTE,
+): AgendaItem[] {
+  return items.map((f) => ({
+    id: f.id ?? "fast-" + f.name,
     day: f.day,
     name: f.name.split(" (")[0] as string,
     kind: "Fast utgift" as const,
