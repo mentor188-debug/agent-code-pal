@@ -11,9 +11,26 @@ import { GjeldTab, type CreditorSummary } from "@/components/betaling/tabs/Gjeld
 import { BudsjettTab } from "@/components/betaling/tabs/BudsjettTab";
 import { LevepengerTab } from "@/components/betaling/tabs/LevepengerTab";
 import { SparingTab } from "@/components/betaling/tabs/SparingTab";
-import { FASTE, LONNSTREKK_SAK } from "@/lib/gjeldsplan";
+import { LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
 import { dueReminders, fireOnce, fireReminders } from "@/lib/varsler";
+import { BudgetItemDialog } from "@/components/betaling/BudgetItemDialog";
+import { IncomeDialog } from "@/components/betaling/IncomeDialog";
+import {
+  defaultBudget,
+  engangsOf,
+  fasteSumOf,
+  incomeFor,
+  loadBudget,
+  removeEngangs,
+  removeFast,
+  saveBudget,
+  setIncome,
+  upsertEngangs,
+  upsertFast,
+  type BudgetData,
+  type BudgetItem,
+} from "@/lib/budsjett";
 import {
   budgetFor,
   carryOverFor,
@@ -33,13 +50,11 @@ import {
   MONTH_KEYS,
   currentMonthKey,
   debtsFor,
-  engangsFor,
   formatNOK,
   loadExtra,
   loadPaid,
   loadSettings,
   monthLabel,
-  monthMeta,
   monthResult,
   saveExtra,
   savePaid,
@@ -86,6 +101,12 @@ function Index() {
   const [liveCosts, setLiveCosts] = useState<LiveCost[]>([]);
   const [liveBudgets, setLiveBudgets] = useState<Record<string, number>>({});
   const [leveThresholds, setLeveThresholds] = useState<Record<string, number>>({});
+  const [budget, setBudget] = useState<BudgetData>(() => defaultBudget());
+  const [incomeOpen, setIncomeOpen] = useState(false);
+  const [itemDialog, setItemDialog] = useState<{
+    kind: "fast" | "engangs";
+    item: BudgetItem | null;
+  } | null>(null);
 
   useEffect(() => {
     const s = loadSettings();
@@ -95,12 +116,18 @@ function Index() {
     setLiveCosts(loadCosts());
     setLiveBudgets(loadBudgets());
     setLeveThresholds(loadThresholds());
+    setBudget(loadBudget());
     setSettings(s);
     setUnlocked(!s.pin);
     setReady(true);
   }, []);
 
-  const meta = monthMeta(current);
+  const updateBudget = (next: BudgetData) => {
+    setBudget(next);
+    saveBudget(next);
+  };
+
+  const meta = incomeFor(current, budget);
   const leveBudget = budgetFor(current, liveBudgets);
   const leveCarry = carryOverFor(current, MONTH_KEYS, liveCosts, liveBudgets, currentMonthKey());
   const leveCosts = costsFor(current, liveCosts);
@@ -110,7 +137,21 @@ function Index() {
     leveBudget + leveCarry,
     leveTerskel,
   );
-  const res = monthResult(current, extra, leveBudget);
+
+  const resultFor = (key: string, leve = budgetFor(key, liveBudgets)) => {
+    const inc = incomeFor(key, budget);
+    const gjeld = debtsFor(key, extra).reduce((s, d) => s + d.amount, 0);
+    const eng = engangsOf(key, budget).reduce((s, e) => s + e.amount, 0);
+    const faste = fasteSumOf(budget);
+    return {
+      netto: inc.netto,
+      faste,
+      engangs: eng,
+      gjeld,
+      resultat: inc.netto - faste - eng - gjeld - leve,
+    };
+  };
+  const res = resultFor(current, leveBudget);
 
   const agenda = useMemo<AgendaItem[]>(() => {
     const debts = debtsFor(current, extra).map((d, i) => ({
@@ -122,16 +163,16 @@ function Index() {
       urgent: d.urgent,
       debt: d,
     }));
-    const eng = engangsFor(current).map((e) => ({
-      id: "eng-" + e.name,
-      day: 15,
+    const eng = engangsOf(current, budget).map((e) => ({
+      id: e.id,
+      day: e.day,
       name: e.name,
       kind: "Engangs" as const,
       amount: e.amount,
       urgent: false,
     }));
-    return [...fasteAgenda(), ...eng, ...debts].sort((a, b) => a.day - b.day);
-  }, [current, extra, due]);
+    return [...fasteAgenda(budget.faste), ...eng, ...debts].sort((a, b) => a.day - b.day);
+  }, [current, extra, due, budget]);
 
   const totalPlan = useMemo(
     () => MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) + LONNSTREKK_SAK.amount,
@@ -231,14 +272,10 @@ function Index() {
       .sort((a, b) => b.total - a.total);
   }, [extra, paid]);
 
-  const buffer = useMemo(
-    () =>
-      MONTH_KEYS.map((k) => ({
-        month: monthLabel(k),
-        value: Math.round(monthResult(k, extra).resultat),
-      })),
-    [extra],
-  );
+  const buffer = MONTH_KEYS.map((k) => ({
+    month: monthLabel(k),
+    value: Math.round(resultFor(k).resultat),
+  }));
 
   const reminders = useMemo(
     () =>
@@ -331,11 +368,15 @@ function Index() {
             label={shortMonthLabel}
             longLabel={monthLabel(current)}
             meta={meta}
-            faste={FASTE.map((f) => ({ name: f.name, amount: f.amount }))}
-            engangs={engangsFor(current)}
+            faste={budget.faste}
+            engangs={engangsOf(current, budget)}
             gjeld={res.gjeld}
             levepenger={leveBudget}
-            onEdit={() => setSettingsOpen(true)}
+            onEditIncome={() => setIncomeOpen(true)}
+            onEditFast={(item) => setItemDialog({ kind: "fast", item })}
+            onAddFast={() => setItemDialog({ kind: "fast", item: null })}
+            onEditEngangs={(item) => setItemDialog({ kind: "engangs", item })}
+            onAddEngangs={() => setItemDialog({ kind: "engangs", item: null })}
           />
         )}
 
@@ -428,6 +469,43 @@ function Index() {
         onOpenChange={setSettingsOpen}
         settings={settings}
         onSave={updateSettings}
+      />
+
+      <IncomeDialog
+        open={incomeOpen}
+        onOpenChange={setIncomeOpen}
+        monthLabel={monthLabel(current)}
+        income={{ brutto: meta.brutto, skatt: meta.skatt, utleggstrekk: meta.utleggstrekk }}
+        onSave={(inc) => updateBudget(setIncome(budget, current, inc))}
+      />
+
+      <BudgetItemDialog
+        open={itemDialog !== null}
+        onOpenChange={(v) => !v && setItemDialog(null)}
+        title={
+          itemDialog?.kind === "engangs"
+            ? itemDialog.item
+              ? "Rediger engangsutgift"
+              : "Ny engangsutgift"
+            : itemDialog?.item
+              ? "Rediger fast utgift"
+              : "Ny fast utgift"
+        }
+        editing={itemDialog?.item ?? null}
+        onSave={(item) =>
+          updateBudget(
+            itemDialog?.kind === "engangs"
+              ? upsertEngangs(budget, current, item)
+              : upsertFast(budget, item),
+          )
+        }
+        onDelete={(id) =>
+          updateBudget(
+            itemDialog?.kind === "engangs"
+              ? removeEngangs(budget, current, id)
+              : removeFast(budget, id),
+          )
+        }
       />
     </div>
   );
