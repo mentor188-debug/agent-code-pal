@@ -42,7 +42,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-auto bottom-0 max-h-[92dvh] w-full max-w-none translate-y-0 gap-0 rounded-t-2xl p-0 sm:top-[50%] sm:bottom-auto sm:max-w-md sm:-translate-y-1/2 sm:rounded-2xl">
+      <DialogContent className="top-auto bottom-0 max-h-[92dvh] w-full max-w-none translate-y-0 grid-rows-[auto_1fr_auto] gap-0 rounded-t-2xl p-0 sm:top-[50%] sm:bottom-auto sm:max-w-md sm:-translate-y-1/2 sm:rounded-2xl">
         <DialogHeader className="shrink-0 border-b border-border px-5 pb-3 pt-5">
           <DialogTitle className="text-base">Innstillinger</DialogTitle>
         </DialogHeader>
@@ -52,7 +52,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
 
           <BankCard />
 
-          <div className="grid grid-cols-1 gap-3 xs:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="goal">Sparemål (kr)</Label>
               <Input
