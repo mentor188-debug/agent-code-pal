@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Plus, SquarePen, Trash2 } from "lucide-react";
+import { AlertTriangle, Bell, Plus, SquarePen, Trash2 } from "lucide-react";
 import { Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatNOK, newId } from "@/lib/betaling";
-import type { LiveCost } from "@/lib/levepenger";
+import { TERSKEL_VALG, leveStatus, type LiveCost } from "@/lib/levepenger";
 
 export function LevepengerTab({
   months,
@@ -15,6 +15,8 @@ export function LevepengerTab({
   longLabel,
   budget,
   carry,
+  threshold,
+  onThreshold,
   onBudget,
   costs,
   onAdd,
@@ -27,6 +29,8 @@ export function LevepengerTab({
   longLabel: string;
   budget: number;
   carry: number;
+  threshold: number;
+  onThreshold: (v: number) => void;
   onBudget: (v: number) => void;
   costs: LiveCost[];
   onAdd: (c: LiveCost) => void;
@@ -39,8 +43,9 @@ export function LevepengerTab({
 
   const spent = costs.reduce((s, c) => s + c.amount, 0);
   const available = budget + carry;
-  const left = available - spent;
-  const pct = available > 0 ? Math.min(100, Math.round((spent / available) * 100)) : 0;
+  const status = leveStatus(spent, available, threshold);
+  const left = status.left;
+  const pct = Math.min(100, status.pct);
 
   const add = () => {
     const value = Number(amount.replace(",", ".")) || 0;
@@ -103,6 +108,23 @@ export function LevepengerTab({
           )}
         </div>
 
+        {status.level !== "ok" && (
+          <div
+            className={`mt-4 flex items-start gap-2 rounded-lg p-3 text-sm ${
+              status.level === "over"
+                ? "bg-destructive/15 text-destructive"
+                : "bg-amber-500/15 text-amber-500"
+            }`}
+          >
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <p>
+              {status.level === "over"
+                ? `Levepengene er brukt opp – ${formatNOK(Math.abs(left))} over budsjettet.`
+                : `Du har brukt ${status.pct} % av levepengene (terskel ${threshold} %). Kun ${formatNOK(left)} igjen.`}
+            </p>
+          </div>
+        )}
+
         {editBudget && (
           <div className="mt-4 flex items-end gap-2">
             <div className="grid flex-1 gap-2">
@@ -124,6 +146,33 @@ export function LevepengerTab({
             </Button>
           </div>
         )}
+
+        <div className="mt-4 border-t border-border pt-3">
+          <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Bell className="size-3.5" /> Varsle meg når jeg har brukt
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {TERSKEL_VALG.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => onThreshold(t)}
+                aria-pressed={threshold === t}
+                className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  threshold === t
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {t} %
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Gjelder <span className="capitalize">{longLabel}</span>. Slå på systemvarsler i
+            Innstillinger for å få beskjed utenfor appen.
+          </p>
+        </div>
       </Card>
 
       <Card>

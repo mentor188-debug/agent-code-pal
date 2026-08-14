@@ -13,10 +13,14 @@ import { LevepengerTab } from "@/components/betaling/tabs/LevepengerTab";
 import { SparingTab } from "@/components/betaling/tabs/SparingTab";
 import { FASTE, LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
-import { dueReminders, fireReminders } from "@/lib/varsler";
+import { dueReminders, fireOnce, fireReminders } from "@/lib/varsler";
 import {
   budgetFor,
   carryOverFor,
+  leveStatus,
+  loadThresholds,
+  saveThresholds,
+  thresholdFor,
   costsFor,
   loadBudgets,
   loadCosts,
@@ -30,6 +34,7 @@ import {
   currentMonthKey,
   debtsFor,
   engangsFor,
+  formatNOK,
   loadExtra,
   loadPaid,
   loadSettings,
@@ -80,6 +85,7 @@ function Index() {
   const [due, setDue] = useState<Record<string, number>>({});
   const [liveCosts, setLiveCosts] = useState<LiveCost[]>([]);
   const [liveBudgets, setLiveBudgets] = useState<Record<string, number>>({});
+  const [leveThresholds, setLeveThresholds] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const s = loadSettings();
@@ -88,6 +94,7 @@ function Index() {
     setDue(loadDue());
     setLiveCosts(loadCosts());
     setLiveBudgets(loadBudgets());
+    setLeveThresholds(loadThresholds());
     setSettings(s);
     setUnlocked(!s.pin);
     setReady(true);
@@ -97,6 +104,12 @@ function Index() {
   const leveBudget = budgetFor(current, liveBudgets);
   const leveCarry = carryOverFor(current, MONTH_KEYS, liveCosts, liveBudgets, currentMonthKey());
   const leveCosts = costsFor(current, liveCosts);
+  const leveTerskel = thresholdFor(current, leveThresholds);
+  const leveStat = leveStatus(
+    leveCosts.reduce((s, c) => s + c.amount, 0),
+    leveBudget + leveCarry,
+    leveTerskel,
+  );
   const res = monthResult(current, extra, leveBudget);
 
   const agenda = useMemo<AgendaItem[]>(() => {
@@ -240,6 +253,18 @@ function Index() {
     fireReminders(reminders);
   }, [ready, settings.notify, reminders]);
 
+  useEffect(() => {
+    if (!ready || !settings.notify) return;
+    if (current !== currentMonthKey() || leveStat.level === "ok") return;
+    fireOnce(
+      `leve-${current}-${leveStat.level}`,
+      leveStat.level === "over" ? "Levepengene er brukt opp" : "Levepengene nærmer seg slutten",
+      leveStat.level === "over"
+        ? `${formatNOK(Math.abs(leveStat.left))} over budsjettet denne måneden.`
+        : `${leveStat.pct} % brukt (terskel ${leveStat.threshold} %). ${formatNOK(leveStat.left)} igjen.`,
+    );
+  }, [ready, settings.notify, current, leveStat.level, leveStat.pct, leveStat.left, leveStat.threshold]);
+
   const togglePaid = (id: string) => {
     const next = paid.includes(id) ? paid.filter((x) => x !== id) : [...paid, id];
     setPaid(next);
@@ -323,6 +348,12 @@ function Index() {
             longLabel={monthLabel(current)}
             budget={leveBudget}
             carry={leveCarry}
+            threshold={leveTerskel}
+            onThreshold={(v) => {
+              const next = { ...leveThresholds, [current]: v };
+              setLeveThresholds(next);
+              saveThresholds(next);
+            }}
             onBudget={(v) => {
               const next = { ...liveBudgets, [current]: v };
               setLiveBudgets(next);

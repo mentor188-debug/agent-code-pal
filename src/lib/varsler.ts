@@ -77,3 +77,19 @@ export function fireReminders(reminders: Reminder[]) {
   window.localStorage.setItem(KEY_SENT, JSON.stringify(sent));
   return count;
 }
+
+/** Sender ett lokalt varsel maks én gang per dag per nøkkel. */
+export function fireOnce(key: string, title: string, body: string) {
+  if (!notificationsSupported() || Notification.permission !== "granted") return false;
+  const sent = readSent();
+  const stamp = todayKey();
+  if (sent[key] === stamp) return false;
+  try {
+    new Notification(title, { body, tag: `bt-${key}-${stamp}` });
+    sent[key] = stamp;
+    window.localStorage.setItem(KEY_SENT, JSON.stringify(sent));
+    return true;
+  } catch {
+    return false;
+  }
+}
