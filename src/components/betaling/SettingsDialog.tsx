@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { Settings } from "@/lib/betaling";
 import { notificationPermission, requestNotificationPermission } from "@/lib/varsler";
+import { SyncCard } from "@/components/betaling/SyncCard";
 
 type Props = {
   open: boolean;
