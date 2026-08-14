@@ -34,6 +34,7 @@ import {
   currentMonthKey,
   debtsFor,
   engangsFor,
+  formatNOK,
   loadExtra,
   loadPaid,
   loadSettings,
