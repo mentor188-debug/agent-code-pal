@@ -165,16 +165,16 @@ function Index() {
       urgent: d.urgent,
       debt: d,
     }));
-    const eng = engangsFor(current).map((e) => ({
-      id: "eng-" + e.name,
-      day: 15,
+    const eng = engangsOf(current, budget).map((e) => ({
+      id: e.id,
+      day: e.day,
       name: e.name,
       kind: "Engangs" as const,
       amount: e.amount,
       urgent: false,
     }));
-    return [...fasteAgenda(), ...eng, ...debts].sort((a, b) => a.day - b.day);
-  }, [current, extra, due]);
+    return [...fasteAgenda(budget.faste), ...eng, ...debts].sort((a, b) => a.day - b.day);
+  }, [current, extra, due, budget]);
 
   const totalPlan = useMemo(
     () => MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) + LONNSTREKK_SAK.amount,
@@ -274,14 +274,10 @@ function Index() {
       .sort((a, b) => b.total - a.total);
   }, [extra, paid]);
 
-  const buffer = useMemo(
-    () =>
-      MONTH_KEYS.map((k) => ({
-        month: monthLabel(k),
-        value: Math.round(monthResult(k, extra).resultat),
-      })),
-    [extra],
-  );
+  const buffer = MONTH_KEYS.map((k) => ({
+    month: monthLabel(k),
+    value: Math.round(resultFor(k).resultat),
+  }));
 
   const reminders = useMemo(
     () =>
