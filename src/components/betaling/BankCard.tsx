@@ -296,19 +296,31 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
         } while (continuationKey && pages < 20);
       }
 
-      // Match mot gjeldsposter
+      // Match mot gjeldsposter — vises til godkjenning før noe endres
       const alreadyPaid = loadPaid();
       const monthDebts = DEBTS.filter((d) => d.month === month);
       const matched = matchTransactions(allTx, monthDebts, alreadyPaid);
+      setTxCount(allTx.length);
       if (matched.length > 0) {
-        const updated = [...new Set([...alreadyPaid, ...matched])];
-        savePaid(updated);
+        setPending(matched);
+        setSelected(matched.map((m) => m.debtId));
         setMatchResult(
-          `${matched.length} betaling(er) auto-avhuket for ${monthLabel}`,
+          `${matched.length} forslag klar til gjennomgang for ${monthLabel}`,
         );
-        toast.success(`${matched.length} betaling(er) avhuket automatisk`);
       } else {
+        setPending([]);
+        setSelected([]);
         setMatchResult(`Ingen samsvarende betalinger funnet i ${monthLabel}`);
+        setLog(
+          appendSyncLog({
+            at: new Date().toISOString(),
+            month,
+            txCount: allTx.length,
+            foundCount: 0,
+            appliedCount: 0,
+            status: "tom",
+          }),
+        );
         toast.info("Ingen nye samsvarende betalinger funnet");
       }
     } catch (e) {
@@ -320,10 +332,63 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
           : msg,
       });
       setMatchResult(msg);
+      setLog(
+        appendSyncLog({
+          at: new Date().toISOString(),
+          month,
+          txCount: 0,
+          foundCount: 0,
+          appliedCount: 0,
+          status: "feil",
+          note: msg.slice(0, 140),
+        }),
+      );
     } finally {
       setSyncing(false);
     }
   };
+
+  const confirmSync = () => {
+    const chosen = pending.filter((m) => selected.includes(m.debtId));
+    if (chosen.length === 0) {
+      toast.error("Velg minst én betaling, eller avbryt");
+      return;
+    }
+    const updated = [...new Set([...loadPaid(), ...chosen.map((m) => m.debtId)])];
+    savePaid(updated);
+    setLog(
+      appendSyncLog({
+        at: new Date().toISOString(),
+        month,
+        txCount,
+        foundCount: pending.length,
+        appliedCount: chosen.length,
+        status: "ok",
+        note: chosen.map((m) => m.creditor).join(", ").slice(0, 140),
+      }),
+    );
+    setPending([]);
+    setSelected([]);
+    setMatchResult(`${chosen.length} betaling(er) avhuket for ${monthLabel}`);
+    toast.success(`${chosen.length} betaling(er) lagt inn`);
+  };
+
+  const cancelSync = () => {
+    setLog(
+      appendSyncLog({
+        at: new Date().toISOString(),
+        month,
+        txCount,
+        foundCount: pending.length,
+        appliedCount: 0,
+        status: "avbrutt",
+      }),
+    );
+    setPending([]);
+    setSelected([]);
+    setMatchResult("Synk avbrutt – ingenting ble endret");
+  };
+
 
   // Allerede koblet til
   if (session) {
