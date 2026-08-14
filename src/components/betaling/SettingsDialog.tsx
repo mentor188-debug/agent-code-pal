@@ -42,21 +42,22 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Innstillinger</DialogTitle>
+      <DialogContent className="top-auto bottom-0 max-h-[92dvh] w-full max-w-none translate-y-0 grid-rows-[auto_1fr_auto] gap-0 rounded-t-2xl p-0 sm:top-[50%] sm:bottom-auto sm:max-w-md sm:-translate-y-1/2 sm:rounded-2xl">
+        <DialogHeader className="shrink-0 border-b border-border px-5 pb-3 pt-5">
+          <DialogTitle className="text-base">Innstillinger</DialogTitle>
         </DialogHeader>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 overflow-y-auto overscroll-contain px-5 py-4 [-webkit-overflow-scrolling:touch]">
           <SyncCard />
 
           <BankCard />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="goal">Sparemål (kr)</Label>
               <Input
                 id="goal"
+                className="h-11 text-base"
                 inputMode="decimal"
                 value={draft.savingsGoal ? String(draft.savingsGoal) : ""}
                 onChange={(e) => setDraft({ ...draft, savingsGoal: num(e.target.value) })}
@@ -66,6 +67,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
               <Label htmlFor="saved">Spart så langt (kr)</Label>
               <Input
                 id="saved"
+                className="h-11 text-base"
                 inputMode="decimal"
                 value={draft.saved ? String(draft.saved) : ""}
                 onChange={(e) => setDraft({ ...draft, saved: num(e.target.value) })}
@@ -75,7 +77,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
 
           <div className="rounded-xl border border-border px-4 py-3">
             <div className="flex items-center justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-medium">Påminnelser før forfall</p>
                 <p className="text-xs text-muted-foreground">
                   {permission === "denied"
@@ -100,6 +102,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
               <Label htmlFor="reminderDays">Varsle antall dager før forfall</Label>
               <Input
                 id="reminderDays"
+                className="h-11 text-base"
                 inputMode="numeric"
                 value={String(draft.reminderDays)}
                 onChange={(e) =>
@@ -113,8 +116,8 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
           </div>
 
           <div className="rounded-xl border border-border px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-sm font-medium">PIN-lås</p>
                 <p className="text-xs text-muted-foreground">4 siffer ved oppstart</p>
               </div>
@@ -122,7 +125,7 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
             </div>
             {pinEnabled && (
               <Input
-                className="mt-3"
+                className="mt-3 h-11 text-center text-base tracking-[0.5em]"
                 inputMode="numeric"
                 maxLength={4}
                 placeholder="••••"
@@ -133,8 +136,9 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="shrink-0 border-t border-border px-5 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3">
           <Button
+            className="h-12 w-full text-base"
             onClick={() => {
               onSave({
                 ...draft,
