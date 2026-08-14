@@ -6,11 +6,29 @@ function b64url(input: string): string {
   return Buffer.from(input).toString("base64url");
 }
 
+/** Normalize PEM key: handle missing newlines, escaped \n, or spaces. */
+function normalizePem(raw: string): string {
+  // Already has proper newlines
+  if (raw.includes("\n-----END")) return raw;
+  // Escaped \n
+  if (raw.includes("\\n")) return raw.replace(/\\n/g, "\n");
+  // No newlines at all — rebuild from content
+  const match = raw.match(/-----BEGIN PRIVATE KEY-----\s*(.+?)\s*-----END PRIVATE KEY-----/s);
+  if (match) {
+    // Remove all whitespace from base64 content
+    const b64 = match[1].replace(/\s+/g, "");
+    // Re-wrap at 64 chars per line
+    const lines = b64.match(/.{1,64}/g) ?? [b64];
+    return `-----BEGIN PRIVATE KEY-----\n${lines.join("\n")}\n-----END PRIVATE KEY-----\n`;
+  }
+  return raw;
+}
+
 function makeJWT(): string {
   const appId = process.env["ENABLE_BANKING_APP_ID"];
-  let pem = process.env["ENABLE_BANKING_PRIVATE_KEY_PEM"];
-  if (!appId || !pem) throw new Error("Enable Banking ikke konfigurert");
-  pem = pem.replace(/\\n/g, "\n");
+  const rawPem = process.env["ENABLE_BANKING_PRIVATE_KEY_PEM"];
+  if (!appId || !rawPem) throw new Error("Enable Banking ikke konfigurert");
+  const pem = normalizePem(rawPem);
 
   const now = Math.floor(Date.now() / 1000);
   const header = { typ: "JWT", alg: "RS256", kid: appId };
