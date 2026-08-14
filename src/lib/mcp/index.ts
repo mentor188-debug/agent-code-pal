@@ -16,5 +16,8 @@ export default defineMcp({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [planOversikt, manedBudsjett, listKrav, kreditorer],
+  // exactOptionalPropertyTypes flags the SDK's optional outputSchema; the runtime shape is correct.
+  tools: [planOversikt, manedBudsjett, listKrav, kreditorer] as Parameters<
+    typeof defineMcp
+  >[0]["tools"],
 });
