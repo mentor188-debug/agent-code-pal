@@ -44,7 +44,7 @@ export function SaldoTab({
   return (
     <div className="space-y-4">
       <PageTitle>Igjen nå</PageTitle>
-      <MonthChips months={months} current={current} onMonth={onMonth} label={label} />
+      <MonthChips months={months} value={current} onChange={onMonth} label={label} />
 
       <Card className="p-5">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
