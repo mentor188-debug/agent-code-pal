@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/bank/callback")({
@@ -30,6 +30,7 @@ type State =
 
 function BankCallback() {
   const [state, setState] = useState<State>({ kind: "loading" });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -49,7 +50,9 @@ function BankCallback() {
       /* lagring kan være blokkert */
     }
     setState({ kind: "ok", code });
-  }, []);
+    // Auto-redirect tilbake til appen etter 2 sekunder
+    setTimeout(() => navigate({ to: "/" }), 2000);
+  }, [navigate]);
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center px-6 text-center text-foreground">
@@ -65,7 +68,7 @@ function BankCallback() {
           <CheckCircle2 className="h-10 w-10 text-primary" />
           <h1 className="mt-4 text-xl font-semibold">Bankkobling godkjent</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Samtykket er registrert. Du kan lukke dette vinduet og gå tilbake til appen.
+            Samtykket er registrert. Du sendes tilbake til appen automatisk…
           </p>
         </>
       )}

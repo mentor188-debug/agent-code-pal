@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import type { Settings } from "@/lib/betaling";
 import { notificationPermission, requestNotificationPermission } from "@/lib/varsler";
 import { SyncCard } from "@/components/betaling/SyncCard";
+import { BankCard } from "@/components/betaling/BankCard";
 
 type Props = {
   open: boolean;
@@ -48,6 +49,8 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave }: Props) 
 
         <div className="grid gap-4">
           <SyncCard />
+
+          <BankCard />
 
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
