@@ -10,6 +10,11 @@ export type LiveCost = {
 
 const KEY_COSTS = "bt_leve_costs_v1";
 const KEY_BUDGETS = "bt_leve_budsjett_v1";
+const KEY_THRESHOLDS = "bt_leve_terskel_v1";
+
+/** Standard varselterskel i prosent av tilgjengelige levepenger. */
+export const DEFAULT_TERSKEL = 80;
+export const TERSKEL_VALG = [50, 60, 70, 80, 90] as const;
 
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
