@@ -332,7 +332,7 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-2xl px-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
+      <main className="mx-auto max-w-2xl px-5 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
         {tab === "hjem" && (
           <HomeTab
             daysLeft={daysUntilFree()}
@@ -445,7 +445,7 @@ function Index() {
         type="button"
         aria-label="Innstillinger"
         onClick={() => setSettingsOpen(true)}
-        className="fixed right-5 top-[calc(1rem+env(safe-area-inset-top))] z-30 flex size-10 items-center justify-center rounded-full bg-card text-muted-foreground"
+        className="fixed right-5 top-[calc(1rem+env(safe-area-inset-top))] z-30 flex size-10 items-center justify-center rounded-full border border-border bg-card/85 text-muted-foreground shadow-sm backdrop-blur transition-transform active:scale-95"
       >
         <SettingsIcon className="size-5" />
       </button>
@@ -458,7 +458,7 @@ function Index() {
             setEditing(null);
             setDialogOpen(true);
           }}
-          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-5 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg"
+          className="fixed bottom-[calc(5.75rem+env(safe-area-inset-bottom))] right-5 z-40 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background transition-transform active:scale-95"
         >
           <Plus className="size-7" />
         </button>

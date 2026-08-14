@@ -29,7 +29,11 @@ export function SectionTitle({ children, icon }: { children: ReactNode; icon?: R
 }
 
 export function PageTitle({ children }: { children: ReactNode }) {
-  return <h1 className="px-1 text-3xl font-bold tracking-tight">{children}</h1>;
+  return (
+    <h1 className="truncate px-1 pr-14 text-[1.75rem] font-bold leading-tight tracking-tight sm:text-3xl">
+      {children}
+    </h1>
+  );
 }
 
 export function MonthChips({
@@ -44,13 +48,16 @@ export function MonthChips({
   label: (m: string) => string;
 }) {
   return (
-    <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-5 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth px-5 pb-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {months.map((m) => (
         <button
           key={m}
           type="button"
+          ref={(el) => {
+            if (el && m === value) el.scrollIntoView({ block: "nearest", inline: "center" });
+          }}
           onClick={() => onChange(m)}
-          className={`shrink-0 rounded-full px-5 py-2 text-sm font-medium capitalize transition-colors ${
+          className={`min-h-11 shrink-0 snap-center rounded-full px-5 py-2 text-sm font-medium capitalize transition-colors active:scale-95 ${
             m === value
               ? "bg-primary text-primary-foreground"
               : "border border-border text-muted-foreground"
