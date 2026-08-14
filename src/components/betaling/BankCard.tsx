@@ -40,38 +40,63 @@ function saveSession(s: BankSession | null) {
   else window.localStorage.removeItem(STORAGE_KEY);
 }
 
-/** Matcher transaksjoner mot gjeldsposter basert på beløp eller KID. */
+type Tx = {
+  amount: number;
+  direction: "DBIT" | "CRDT";
+  date?: string;
+  text?: string;
+  ref?: string;
+};
+
+type Match = {
+  debtId: string;
+  creditor: string;
+  debtAmount: number;
+  txAmount: number;
+  txDate?: string;
+  txText?: string;
+  reason: "beløp" | "KID" | "navn";
+};
+
+/** Matcher transaksjoner mot gjeldsposter basert på beløp, KID eller navn. */
 function matchTransactions(
-  transactions: {
-    amount: number;
-    direction: "DBIT" | "CRDT";
-    date?: string;
-    text?: string;
-    ref?: string;
-  }[],
+  transactions: Tx[],
   debts: Debt[],
   alreadyPaid: string[],
-): string[] {
-  const matched = new Set<string>();
+): Match[] {
+  const matches: Match[] = [];
+  const taken = new Set<string>();
   for (const tx of transactions) {
     if (tx.direction !== "DBIT") continue; // kun utgående betalinger
     for (const debt of debts) {
-      if (alreadyPaid.includes(debt.id) || matched.has(debt.id)) continue;
+      if (alreadyPaid.includes(debt.id) || taken.has(debt.id)) continue;
       const amountMatch = Math.abs(tx.amount - debt.amount) < 1;
-      const kidMatch =
-        debt.kid && tx.ref && tx.ref.replace(/\s/g, "").includes(debt.kid);
-      const creditorMatch =
+      const kidMatch = Boolean(
+        debt.kid && tx.ref && tx.ref.replace(/\s/g, "").includes(debt.kid),
+      );
+      const creditorMatch = Boolean(
         debt.creditor &&
-        tx.text &&
-        tx.text.toLowerCase().includes(debt.creditor.toLowerCase());
-      if (amountMatch || kidMatch || creditorMatch) {
-        matched.add(debt.id);
-        break;
-      }
+          tx.text &&
+          tx.text.toLowerCase().includes(debt.creditor.toLowerCase()),
+      );
+      if (!amountMatch && !kidMatch && !creditorMatch) continue;
+      taken.add(debt.id);
+      const match: Match = {
+        debtId: debt.id,
+        creditor: debt.creditor,
+        debtAmount: debt.amount,
+        txAmount: tx.amount,
+        reason: kidMatch ? "KID" : amountMatch ? "beløp" : "navn",
+      };
+      if (tx.date) match.txDate = tx.date;
+      if (tx.text) match.txText = tx.text;
+      matches.push(match);
+      break;
     }
   }
-  return [...matched];
+  return matches;
 }
+
 
 function monthRange(month: string) {
   const [y, m] = month.split("-").map(Number);
