@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://zjhlehopzfskfkcjsfln.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "creative-canvas",
+      "version": "0.1.0",
+      "title": "Creative Canvas"
+    },
+    "tools": [
+      {
+        "name": "plan_oversikt",
+        "title": "Plan overview",
+        "description": "Overall payoff plan: total debt in the plan, target debt-free date, days remaining, and a per-month result summary.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "maned_budsjett",
+        "title": "Month budget",
+        "description": "Budget breakdown for one month: gross salary, tax, garnishment, net, fixed costs, one-off costs, debt payments and the resulting buffer.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "month": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$",
+              "description": "Month key, e.g. 2026-08."
+            }
+          },
+          "required": [
+            "month"
+          ]
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_krav",
+        "title": "List claims",
+        "description": "List debt claims in the payoff plan, optionally filtered by month (YYYY-MM), creditor name, or urgency. Includes amount, case number, KID and account.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "month": {
+              "description": "Month key, e.g. 2026-08.",
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            },
+            "creditor": {
+              "description": "Case-insensitive creditor filter.",
+              "type": "string",
+              "minLength": 1
+            },
+            "onlyUrgent": {
+              "description": "Only claims flagged as urgent.",
+              "type": "boolean"
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "kreditorer",
+        "title": "Creditor overview",
+        "description": "Aggregated overview per creditor: total amount in the plan, number of cases, case numbers, KID numbers and urgency flag.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
