@@ -116,6 +116,16 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
   >({});
   const [syncing, setSyncing] = useState(false);
   const [matchResult, setMatchResult] = useState<string | null>(null);
+  const [pending, setPending] = useState<Match[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [txCount, setTxCount] = useState(0);
+  const [log, setLog] = useState<SyncLogEntry[]>([]);
+  const [showLog, setShowLog] = useState(false);
+
+  useEffect(() => {
+    setLog(loadSyncLog());
+  }, []);
+
 
   // Last eksisterende sesjon
   useEffect(() => {
