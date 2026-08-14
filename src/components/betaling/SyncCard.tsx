@@ -13,6 +13,7 @@ import {
   describeKey,
   isEmptySnapshot,
   loadSyncChoice,
+  mergeSnapshots,
   pullState,
   pushState,
   saveSyncChoice,
@@ -60,10 +61,20 @@ export function SyncCard() {
         const remote = await pullState(user.id);
         if (cancelled) return;
         if (remote && !isEmptySnapshot(remote.data)) {
-          if (JSON.stringify(remote.data) !== JSON.stringify(snapshot())) {
-            applySnapshot(remote.data);
+          const local = snapshot();
+          // Skyen overstyrer kun det den faktisk har – lokale deler beholdes.
+          const merged = mergeSnapshots(remote.data, local);
+          if (JSON.stringify(merged) !== JSON.stringify(local)) {
+            applySnapshot(merged);
+            await pushState(user.id);
             toast.success("Data hentet fra skyen");
             window.location.reload();
+            return;
+          }
+          // Skyen mangler deler som finnes lokalt → last dem opp.
+          if (Object.keys(local).length > Object.keys(remote.data).length) {
+            const at = await pushState(user.id);
+            setLastSync(at);
             return;
           }
           setLastSync(remote.updatedAt);
@@ -167,7 +178,7 @@ export function SyncCard() {
                   toast.info("Ingen data i skyen ennå");
                   return;
                 }
-                applySnapshot(remote.data);
+                applySnapshot(mergeSnapshots(remote.data, snapshot()));
                 toast.success("Hentet fra skyen");
                 window.location.reload();
               })
