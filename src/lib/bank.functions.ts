@@ -12,23 +12,21 @@ export const listNorwegianBanks = createServerFn({ method: "GET" }).handler(
 );
 
 export const startBankAuth = createServerFn({ method: "POST" })
-  .inputValidator(
-    (data: { bankName: string; redirectUrl: string; state: string }) => data,
-  )
+  .validator((data: { bankName: string; redirectUrl: string; state: string }) => data)
   .handler(async ({ data }) =>
     startAuth(data.bankName, data.redirectUrl, data.state),
   );
 
 export const completeBankAuth = createServerFn({ method: "POST" })
-  .inputValidator((data: { code: string }) => data)
+  .validator((data: { code: string }) => data)
   .handler(async ({ data }) => completeAuth(data.code));
 
 export const fetchBankBalances = createServerFn({ method: "POST" })
-  .inputValidator((data: { accountUid: string }) => data)
+  .validator((data: { accountUid: string }) => data)
   .handler(async ({ data }) => getBalances(data.accountUid));
 
 export const fetchBankTransactions = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (data: {
       accountUid: string;
       dateFrom?: string;
