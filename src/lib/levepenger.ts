@@ -73,3 +73,33 @@ export function availableFor(
 ) {
   return budgetFor(month, budgets) + carryOverFor(month, monthKeys, costs, budgets, today);
 }
+
+export const loadThresholds = () => read<Record<string, number>>(KEY_THRESHOLDS, {});
+export const saveThresholds = (v: Record<string, number>) =>
+  window.localStorage.setItem(KEY_THRESHOLDS, JSON.stringify(v));
+
+export function thresholdFor(month: string, thresholds: Record<string, number>) {
+  return thresholds[month] ?? DEFAULT_TERSKEL;
+}
+
+export type LeveStatus = {
+  spent: number;
+  available: number;
+  left: number;
+  pct: number;
+  threshold: number;
+  level: "ok" | "warn" | "over";
+};
+
+/** Status mot valgt terskel for måneden: ok, nær grensen (warn) eller overskredet. */
+export function leveStatus(spent: number, available: number, threshold: number): LeveStatus {
+  const pct = available > 0 ? Math.round((spent / available) * 100) : spent > 0 ? 100 : 0;
+  return {
+    spent,
+    available,
+    left: available - spent,
+    pct,
+    threshold,
+    level: spent >= available ? "over" : pct >= threshold ? "warn" : "ok",
+  };
+}
