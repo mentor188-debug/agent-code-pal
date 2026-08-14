@@ -9,10 +9,20 @@ import { HomeTab } from "@/components/betaling/tabs/HomeTab";
 import { KalenderTab } from "@/components/betaling/tabs/KalenderTab";
 import { GjeldTab, type CreditorSummary } from "@/components/betaling/tabs/GjeldTab";
 import { BudsjettTab } from "@/components/betaling/tabs/BudsjettTab";
+import { LevepengerTab } from "@/components/betaling/tabs/LevepengerTab";
 import { SparingTab } from "@/components/betaling/tabs/SparingTab";
 import { FASTE, LONNSTREKK_SAK } from "@/lib/gjeldsplan";
 import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
 import { dueReminders, fireReminders } from "@/lib/varsler";
+import {
+  budgetFor,
+  costsFor,
+  loadBudgets,
+  loadCosts,
+  saveBudgets,
+  saveCosts,
+  type LiveCost,
+} from "@/lib/levepenger";
 import {
   DEFAULT_SETTINGS,
   MONTH_KEYS,
@@ -67,19 +77,25 @@ function Index() {
   const [editing, setEditing] = useState<Debt | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [due, setDue] = useState<Record<string, number>>({});
+  const [liveCosts, setLiveCosts] = useState<LiveCost[]>([]);
+  const [liveBudgets, setLiveBudgets] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const s = loadSettings();
     setPaid(loadPaid());
     setExtra(loadExtra());
     setDue(loadDue());
+    setLiveCosts(loadCosts());
+    setLiveBudgets(loadBudgets());
     setSettings(s);
     setUnlocked(!s.pin);
     setReady(true);
   }, []);
 
   const meta = monthMeta(current);
-  const res = monthResult(current, extra);
+  const leveBudget = budgetFor(current, liveBudgets);
+  const leveCosts = costsFor(current, liveCosts);
+  const res = monthResult(current, extra, leveBudget);
 
   const agenda = useMemo<AgendaItem[]>(() => {
     const debts = debtsFor(current, extra).map((d, i) => ({
@@ -291,7 +307,35 @@ function Index() {
             faste={FASTE.map((f) => ({ name: f.name, amount: f.amount }))}
             engangs={engangsFor(current)}
             gjeld={res.gjeld}
+            levepenger={leveBudget}
             onEdit={() => setSettingsOpen(true)}
+          />
+        )}
+
+        {tab === "levepenger" && (
+          <LevepengerTab
+            months={MONTH_KEYS}
+            current={current}
+            onMonth={setCurrent}
+            label={shortMonthLabel}
+            longLabel={monthLabel(current)}
+            budget={leveBudget}
+            onBudget={(v) => {
+              const next = { ...liveBudgets, [current]: v };
+              setLiveBudgets(next);
+              saveBudgets(next);
+            }}
+            costs={leveCosts}
+            onAdd={(c) => {
+              const next = [...liveCosts, c];
+              setLiveCosts(next);
+              saveCosts(next);
+            }}
+            onDelete={(id) => {
+              const next = liveCosts.filter((c) => c.id !== id);
+              setLiveCosts(next);
+              saveCosts(next);
+            }}
           />
         )}
 

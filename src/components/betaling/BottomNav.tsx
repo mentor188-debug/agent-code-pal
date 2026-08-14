@@ -1,12 +1,13 @@
-import { Calendar, Home, Shield, TrendingDown, Wallet } from "lucide-react";
+import { Calendar, Home, Shield, ShoppingBasket, TrendingDown, Wallet } from "lucide-react";
 
-export type TabKey = "hjem" | "kalender" | "gjeld" | "budsjett" | "sparing";
+export type TabKey = "hjem" | "kalender" | "gjeld" | "budsjett" | "levepenger" | "sparing";
 
 const TABS: { key: TabKey; label: string; icon: typeof Home }[] = [
   { key: "hjem", label: "Hjem", icon: Home },
   { key: "kalender", label: "Kalender", icon: Calendar },
   { key: "gjeld", label: "Gjeld", icon: TrendingDown },
   { key: "budsjett", label: "Budsjett", icon: Wallet },
+  { key: "levepenger", label: "Leve", icon: ShoppingBasket },
   { key: "sparing", label: "Sparing", icon: Shield },
 ];
 

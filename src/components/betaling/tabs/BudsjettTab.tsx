@@ -12,6 +12,7 @@ export function BudsjettTab({
   faste,
   engangs,
   gjeld,
+  levepenger,
   onEdit,
 }: {
   months: string[];
@@ -23,14 +24,16 @@ export function BudsjettTab({
   faste: { name: string; amount: number }[];
   engangs: { name: string; amount: number }[];
   gjeld: number;
+  levepenger: number;
   onEdit: () => void;
 }) {
   const fasteSum = faste.reduce((s, f) => s + f.amount, 0);
   const engangsSum = engangs.reduce((s, e) => s + e.amount, 0);
-  const rest = meta.netto - fasteSum - engangsSum - gjeld;
+  const rest = meta.netto - fasteSum - engangsSum - gjeld - levepenger;
   const skattPct = meta.brutto ? Math.round((Math.abs(meta.skatt) / meta.brutto) * 100) : 0;
   const parts = [
     { label: "Faste utgifter", value: fasteSum, color: "var(--color-chart-3)" },
+    { label: "Levepenger", value: levepenger, color: "var(--color-chart-5)" },
     { label: "Engangs", value: engangsSum, color: "var(--color-chart-4)" },
     { label: "Gjeldsnedbetaling", value: gjeld, color: "var(--color-chart-2)" },
     { label: "Til rådighet", value: Math.max(0, rest), color: "var(--color-muted-foreground)" },
