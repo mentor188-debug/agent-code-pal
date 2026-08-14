@@ -154,7 +154,14 @@ export function BankCard() {
     }
     setLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/bank/callback`;
+      // Enable Banking godtar kun registrerte redirect-URL-er.
+      // Preview-domener er ikke registrert, så bruk alltid produksjons-URL-en.
+      const REGISTERED_ORIGIN = "https://agent-code-pal.lovable.app";
+      const origin =
+        window.location.origin === REGISTERED_ORIGIN
+          ? window.location.origin
+          : REGISTERED_ORIGIN;
+      const redirectUrl = `${origin}/bank/callback`;
       const state = crypto.randomUUID();
       window.localStorage.setItem("bank.auth.state", state);
       const result = await startBankAuth({
