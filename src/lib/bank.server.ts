@@ -14,8 +14,7 @@ function normalizePem(raw: string): string {
   if (raw.includes("\\n")) return raw.replace(/\\n/g, "\n");
   // No newlines at all — rebuild from content
   const match = raw.match(/-----BEGIN PRIVATE KEY-----\s*(.+?)\s*-----END PRIVATE KEY-----/s);
-  if (match) {
-    // Remove all whitespace from base64 content
+  if (match?.[1]) {
     const b64 = match[1].replace(/\s+/g, "");
     // Re-wrap at 64 chars per line
     const lines = b64.match(/.{1,64}/g) ?? [b64];
