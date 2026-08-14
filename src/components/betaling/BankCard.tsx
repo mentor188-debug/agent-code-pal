@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Building2, CheckCircle2, Loader2, RefreshCw, Unlink } from "lucide-react";
+import { Building2, CheckCircle2, History, Loader2, RefreshCw, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -485,7 +485,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
         </div>
 
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Synk henter kun transaksjoner for {monthLabel}. Ingenting huk es av før du
+          Synk henter kun transaksjoner for {monthLabel}. Ingenting hukes av før du
           har godkjent forslagene.
         </p>
 
@@ -497,7 +497,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               {txCount} transaksjon(er) lest for {monthLabel}. Velg hva som skal
-              huk es av.
+              hukes av.
             </p>
             <div className="mt-2 space-y-1.5">
               {pending.map((m) => {
