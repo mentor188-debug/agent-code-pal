@@ -73,7 +73,14 @@ function matchTransactions(
   return [...matched];
 }
 
-export function BankCard() {
+function monthRange(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  const first = new Date(Date.UTC(y!, m! - 1, 1));
+  const last = new Date(Date.UTC(y!, m!, 0));
+  return { from: first.toISOString().slice(0, 10), to: last.toISOString().slice(0, 10) };
+}
+
+export function BankCard({ month, monthLabel }: { month: string; monthLabel: string }) {
   const [session, setSession] = useState<BankSession | null>(null);
   const [banks, setBanks] = useState<{ name: string; logo?: string }[]>([]);
   const [selectedBank, setSelectedBank] = useState("");
@@ -214,10 +221,8 @@ export function BankCard() {
     setSyncing(true);
     setMatchResult(null);
     try {
-      const dateFrom = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .slice(0, 10);
-      const dateTo = new Date().toISOString().slice(0, 10);
+      // Synk kun for måneden som er valgt i appen.
+      const { from: dateFrom, to: dateTo } = monthRange(month);
       const allTx: {
         amount: number;
         direction: "DBIT" | "CRDT";
@@ -268,16 +273,17 @@ export function BankCard() {
 
       // Match mot gjeldsposter
       const alreadyPaid = loadPaid();
-      const matched = matchTransactions(allTx, DEBTS, alreadyPaid);
+      const monthDebts = DEBTS.filter((d) => d.month === month);
+      const matched = matchTransactions(allTx, monthDebts, alreadyPaid);
       if (matched.length > 0) {
         const updated = [...new Set([...alreadyPaid, ...matched])];
         savePaid(updated);
         setMatchResult(
-          `${matched.length} betaling(er) auto-avhuket fra banktransaksjoner`,
+          `${matched.length} betaling(er) auto-avhuket for ${monthLabel}`,
         );
         toast.success(`${matched.length} betaling(er) avhuket automatisk`);
       } else {
-        setMatchResult("Ingen samsvarende betalinger funnet i perioden");
+        setMatchResult(`Ingen samsvarende betalinger funnet i ${monthLabel}`);
         toast.info("Ingen nye samsvarende betalinger funnet");
       }
     } catch (e) {
@@ -370,6 +376,10 @@ export function BankCard() {
             )}
           </Button>
         </div>
+
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Synk henter kun transaksjoner for {monthLabel} og huker av krav i den måneden.
+        </p>
 
         {matchResult && (
           <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
