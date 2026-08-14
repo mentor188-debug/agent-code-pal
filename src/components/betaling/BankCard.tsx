@@ -307,7 +307,7 @@ export function BankCard() {
               <span className="truncate text-muted-foreground">
                 {acc.name || acc.iban || acc.uid.slice(0, 8)}
               </span>
-              {balances[acc.uid]?.[0] && (
+              {balances[acc.uid]?.[0]?.amount && (
                 <span className="font-medium">
                   {formatNOK(parseFloat(balances[acc.uid][0].amount))}
                 </span>
