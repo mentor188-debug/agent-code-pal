@@ -139,7 +139,10 @@ export function SyncCard() {
             onClick={() =>
               withBusy(async () => {
                 const remote = await pullState(session.user.id);
-                if (!remote) return toast.info("Ingen data i skyen ennå");
+                if (!remote) {
+                  toast.info("Ingen data i skyen ennå");
+                  return;
+                }
                 applySnapshot(remote.data);
                 toast.success("Hentet fra skyen");
                 window.location.reload();
