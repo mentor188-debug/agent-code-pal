@@ -120,6 +120,9 @@ function Index() {
     kind: "fast" | "engangs";
     item: BudgetItem | null;
   } | null>(null);
+  const [plan, setPlan] = useState<PlanState>(() => defaultPlanState());
+  const [planOppdatert, setPlanOppdatert] = useState(false);
+  const [fordel, setFordel] = useState<RegistrertBetaling | null>(null);
 
   useEffect(() => {
     const s = loadSettings();
@@ -130,6 +133,8 @@ function Index() {
     setLiveBudgets(loadBudgets());
     setLeveThresholds(loadThresholds());
     setBudget(loadBudget());
+    setPlan(loadPlan());
+    setPlanOppdatert(shouldAnnounceUpdate());
     setSettings(s);
     setUnlocked(!s.pin);
     setReady(true);
@@ -139,6 +144,12 @@ function Index() {
     setBudget(next);
     saveBudget(next);
   };
+
+  const updatePlan = (next: PlanState) => {
+    setPlan(next);
+    savePlan(next);
+  };
+
 
   const meta = incomeFor(current, budget);
   const leveBudget = budgetFor(current, liveBudgets);
