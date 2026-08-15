@@ -50,13 +50,44 @@ export function SaldoTab({
   onToggle: (id: string) => void;
 }) {
   const [actuals, setActuals] = useState<Record<string, number>>({});
+  const [starts, setStarts] = useState<Record<string, number>>({});
+  const [lonn, setLonn] = useState<Record<string, boolean>>({});
   const [log, setLog] = useState<SyncLogEntry[]>([]);
   const [draft, setDraft] = useState("");
+  const [startDraft, setStartDraft] = useState("");
 
   useEffect(() => {
     setActuals(loadActual());
+    setStarts(loadStart());
+    setLonn(loadLonn());
     setLog(loadSyncLog());
   }, []);
+
+  const start = starts[current] ?? 0;
+  useEffect(() => {
+    setStartDraft(starts[current] === undefined ? "" : String(starts[current]));
+  }, [current, starts]);
+
+  const lonnMottatt = lonn[current] ?? true;
+  const toggleLonn = () => {
+    const next = { ...lonn, [current]: !lonnMottatt };
+    setLonn(next);
+    saveLonn(next);
+  };
+
+  const commitStart = () => {
+    const cleaned = startDraft.replace(/\s/g, "").replace(",", ".");
+    const next = { ...starts };
+    if (cleaned === "") delete next[current];
+    else {
+      const n = Number(cleaned);
+      if (!Number.isFinite(n)) return;
+      next[current] = n;
+    }
+    setStarts(next);
+    saveStart(next);
+  };
+
 
   const actual = actuals[current];
   useEffect(() => {
