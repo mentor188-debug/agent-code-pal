@@ -10,7 +10,14 @@ import {
 } from "lucide-react";
 import { Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
-import { loadActual, saveActual } from "@/lib/saldo";
+import {
+  loadActual,
+  loadLonn,
+  loadStart,
+  saveActual,
+  saveLonn,
+  saveStart,
+} from "@/lib/saldo";
 import type { AgendaItem } from "@/lib/dager";
 import type { LiveCost } from "@/lib/levepenger";
 import { dayInRange, monthRange, rangeLabel } from "@/lib/periode";
