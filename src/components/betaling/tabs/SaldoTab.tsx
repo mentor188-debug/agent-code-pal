@@ -31,18 +31,46 @@ export function SaldoTab({
   leveSpent: number;
   onToggle: (id: string) => void;
 }) {
+  const [actuals, setActuals] = useState<Record<string, number>>({});
+  const [draft, setDraft] = useState("");
+
+  useEffect(() => {
+    setActuals(loadActual());
+  }, []);
+
+  const actual = actuals[current];
+  useEffect(() => {
+    setDraft(actual === undefined ? "" : String(actual));
+  }, [current, actual]);
+
+  const commitActual = () => {
+    const cleaned = draft.replace(/\s/g, "").replace(",", ".");
+    const next = { ...actuals };
+    if (cleaned === "") delete next[current];
+    else {
+      const n = Number(cleaned);
+      if (!Number.isFinite(n)) return;
+      next[current] = n;
+    }
+    setActuals(next);
+    saveActual(next);
+  };
+
   const paidItems = items.filter((i) => paidIds.includes(i.id));
   const openItems = items.filter((i) => !paidIds.includes(i.id));
   const betalt = paidItems.reduce((s, i) => s + i.amount, 0);
   const gjenstaar = openItems.reduce((s, i) => s + i.amount, 0);
   const leveRest = Math.max(0, leveAvailable - leveSpent);
 
-  const disponibelt = netto - betalt - leveSpent;
+  const beregnet = netto - betalt - leveSpent;
+  const disponibelt = actual !== undefined ? actual : beregnet;
+  const avvik = actual !== undefined ? actual - beregnet : 0;
   const etterAlt = disponibelt - gjenstaar - leveRest;
 
   const brukt = betalt + leveSpent;
   const pct = netto > 0 ? Math.min(100, (brukt / netto) * 100) : 0;
   const reservertPct = netto > 0 ? Math.min(100 - pct, ((gjenstaar + leveRest) / netto) * 100) : 0;
+
 
   return (
     <div className="space-y-4">
