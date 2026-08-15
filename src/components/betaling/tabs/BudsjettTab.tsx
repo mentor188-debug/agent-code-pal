@@ -73,20 +73,29 @@ export function BudsjettTab({
           </button>
         </div>
         <p className="mt-2 text-4xl font-bold tabular-nums">{formatNOK(meta.netto)}</p>
-        <p className="text-sm text-muted-foreground">Netto tilgjengelig</p>
+        <p className="text-sm text-muted-foreground">
+          Netto tilgjengelig ·{" "}
+          <span className={meta.actual ? "font-semibold text-primary" : ""}>
+            {meta.actual ? "FAKTISK registrert" : "forecast"}
+          </span>
+        </p>
 
         <dl className="mt-5 space-y-2.5 text-sm">
           <Row label="Bruttolønn" value={formatNOK(meta.brutto)} />
           <Row label={`Skattetrekk (${skattPct}%)`} value={formatNOK(meta.skatt)} negative />
           <Row
-            label="Utleggstrekk (Namsfogden)"
+            label="Utleggstrekk (gjennomført)"
             value={formatNOK(meta.utleggstrekk)}
             negative={meta.utleggstrekk !== 0}
           />
           <div className="h-px bg-border" />
           <Row label="Netto" value={formatNOK(meta.netto)} strong />
         </dl>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Utleggstrekk trekkes kun fra når du har markert det som gjennomført.
+        </p>
       </Card>
+
 
       <Card className="p-5">
         <h2 className="font-semibold">Fordeling av netto</h2>
