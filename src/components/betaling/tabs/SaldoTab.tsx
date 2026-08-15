@@ -10,19 +10,11 @@ import {
 } from "lucide-react";
 import { Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
-import {
-  loadActual,
-  loadLonn,
-  loadStart,
-  saveActual,
-  saveLonn,
-  saveStart,
-} from "@/lib/saldo";
+import { loadActual, loadLonn, loadStart, saveActual, saveLonn, saveStart } from "@/lib/saldo";
 import type { AgendaItem } from "@/lib/dager";
 import type { LiveCost } from "@/lib/levepenger";
 import { dayInRange, monthRange, rangeLabel } from "@/lib/periode";
 import { loadSyncLog, type SyncLogEntry } from "@/lib/banklogg";
-
 
 export function SaldoTab({
   months,
@@ -88,7 +80,6 @@ export function SaldoTab({
     saveStart(next);
   };
 
-
   const actual = actuals[current];
   useEffect(() => {
     setDraft(actual === undefined ? "" : String(actual));
@@ -131,7 +122,6 @@ export function SaldoTab({
   const pct = grunnlag > 0 ? Math.min(100, (brukt / grunnlag) * 100) : 0;
   const reservertPct =
     grunnlag > 0 ? Math.min(100 - pct, ((gjenstaar + leveRest) / grunnlag) * 100) : 0;
-
 
   return (
     <div className="space-y-4">
@@ -192,9 +182,6 @@ export function SaldoTab({
             <span className="tabular-nums">{formatNOK(beregnet)}</span>
           </div>
         </div>
-
-
-
 
         <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-secondary">
           <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
@@ -296,8 +283,6 @@ export function SaldoTab({
           </p>
         )}
       </Card>
-
-
 
       <div className="grid grid-cols-2 gap-3">
         <Card className="p-4">

@@ -7,13 +7,30 @@ import { PinLock } from "@/components/betaling/PinLock";
 import { BottomNav, type TabKey } from "@/components/betaling/BottomNav";
 import { HomeTab } from "@/components/betaling/tabs/HomeTab";
 import { KalenderTab } from "@/components/betaling/tabs/KalenderTab";
-import { GjeldTab, type CreditorSummary } from "@/components/betaling/tabs/GjeldTab";
+import { GjeldTab } from "@/components/betaling/tabs/GjeldTab";
 import { BudsjettTab } from "@/components/betaling/tabs/BudsjettTab";
 import { LevepengerTab } from "@/components/betaling/tabs/LevepengerTab";
 import { SparingTab } from "@/components/betaling/tabs/SparingTab";
 import { SaldoTab } from "@/components/betaling/tabs/SaldoTab";
-import { LONNSTREKK_SAK } from "@/lib/gjeldsplan";
-import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
+import { PendlingCard } from "@/components/betaling/PendlingCard";
+import { AbonnementCard } from "@/components/betaling/AbonnementCard";
+import { ForpliktelserCard } from "@/components/betaling/ForpliktelserCard";
+import { FordelBetalingDialog } from "@/components/betaling/FordelBetalingDialog";
+import { loadPlan, markUpdateSeen, savePlan, shouldAnnounceUpdate } from "@/lib/gjeld/store";
+import {
+  defaultPlanState,
+  pendlingTotal,
+  type PlanState,
+  type RegistrertBetaling,
+} from "@/lib/gjeld/model";
+import {
+  byggPlan,
+  forecast,
+  kapasitetFor,
+  nesteBesteBetaling,
+  statusPerKreditor,
+} from "@/lib/gjeld/motor";
+import { dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
 import { dueReminders, fireOnce, fireReminders } from "@/lib/varsler";
 import { BudgetItemDialog } from "@/components/betaling/BudgetItemDialog";
 import { IncomeDialog } from "@/components/betaling/IncomeDialog";
@@ -108,6 +125,9 @@ function Index() {
     kind: "fast" | "engangs";
     item: BudgetItem | null;
   } | null>(null);
+  const [plan, setPlan] = useState<PlanState>(() => defaultPlanState());
+  const [planOppdatert, setPlanOppdatert] = useState(false);
+  const [fordel, setFordel] = useState<RegistrertBetaling | null>(null);
 
   useEffect(() => {
     const s = loadSettings();
@@ -118,6 +138,8 @@ function Index() {
     setLiveBudgets(loadBudgets());
     setLeveThresholds(loadThresholds());
     setBudget(loadBudget());
+    setPlan(loadPlan());
+    setPlanOppdatert(shouldAnnounceUpdate());
     setSettings(s);
     setUnlocked(!s.pin);
     setReady(true);
@@ -126,6 +148,11 @@ function Index() {
   const updateBudget = (next: BudgetData) => {
     setBudget(next);
     saveBudget(next);
+  };
+
+  const updatePlan = (next: PlanState) => {
+    setPlan(next);
+    savePlan(next);
   };
 
   const meta = incomeFor(current, budget);
@@ -139,23 +166,59 @@ function Index() {
     leveTerskel,
   );
 
+  // Resurs avsluttes etter valgt sluttmåned – da forsvinner den fra faste utgifter.
+  const fasteFor = (key: string) =>
+    budget.faste.filter((f) => !/resurs/i.test(f.name) || key <= plan.resursSlutt);
+  const fasteSumFor = (key: string) => fasteFor(key).reduce((s, f) => s + f.amount, 0);
+
+  const kapasitet = useMemo(
+    () => (key: string) =>
+      kapasitetFor(key, plan, {
+        netto: incomeFor(key, budget).netto,
+        faste: fasteSumFor(key),
+        engangs: engangsOf(key, budget).reduce((s, e) => s + e.amount, 0),
+        levepenger: budgetFor(key, liveBudgets),
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [plan, budget, liveBudgets],
+  );
+
+  const planDebts = useMemo<Debt[]>(
+    () =>
+      byggPlan(plan, (m) => kapasitet(m).tilGjeld, currentMonthKey()).map((p) => ({
+        id: p.id,
+        month: p.month,
+        creditor: p.creditor,
+        caseNo: p.caseNo,
+        description: p.description,
+        amount: p.amount,
+        kid: p.kid,
+        account: p.account,
+        auto: false,
+        urgent: p.urgent,
+      })),
+    [plan, kapasitet],
+  );
+
   const resultFor = (key: string, leve = budgetFor(key, liveBudgets)) => {
     const inc = incomeFor(key, budget);
-    const gjeld = debtsFor(key, extra).reduce((s, d) => s + d.amount, 0);
+    const gjeld = debtsFor(key, extra, planDebts).reduce((s, d) => s + d.amount, 0);
     const eng = engangsOf(key, budget).reduce((s, e) => s + e.amount, 0);
-    const faste = fasteSumOf(budget);
+    const faste = fasteSumFor(key);
+    const pendling = kapasitet(key).pendling;
     return {
       netto: inc.netto,
       faste,
       engangs: eng,
       gjeld,
-      resultat: inc.netto - faste - eng - gjeld - leve,
+      pendling,
+      resultat: inc.netto - faste - eng - gjeld - leve - pendling,
     };
   };
   const res = resultFor(current, leveBudget);
 
   const agenda = useMemo<AgendaItem[]>(() => {
-    const debts = debtsFor(current, extra).map((d, i) => ({
+    const debts = debtsFor(current, extra, planDebts).map((d, i) => ({
       id: d.id,
       day: dueDayFor(d, due, i),
       name: d.creditor,
@@ -172,106 +235,28 @@ function Index() {
       amount: e.amount,
       urgent: false,
     }));
-    return [...fasteAgenda(budget.faste), ...eng, ...debts].sort((a, b) => a.day - b.day);
-  }, [current, extra, due, budget]);
+    return [...fasteAgenda(fasteFor(current)), ...eng, ...debts].sort((a, b) => a.day - b.day);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, extra, due, budget, planDebts, plan.resursSlutt]);
 
-  const totalPlan = useMemo(
-    () => MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) + LONNSTREKK_SAK.amount,
-    [extra],
+  const kreditorer = useMemo(() => statusPerKreditor(plan), [plan]);
+  const estimertGjeld = kreditorer.reduce((s, k) => s + k.estimert, 0);
+  const dokumentertTotal = kreditorer.reduce((s, k) => s + k.dokumentert, 0);
+  const bekreftetBetalt = kreditorer.reduce((s, k) => s + k.bekreftetBetalt + k.ufordelt, 0);
+  const ufordeltSum = kreditorer.reduce((s, k) => s + k.ufordelt, 0);
+  const samletKvalitet = kreditorer.some((k) => k.kvalitet === "rod")
+    ? ("rod" as const)
+    : kreditorer.some((k) => k.kvalitet === "gul")
+      ? ("gul" as const)
+      : ("gronn" as const);
+
+  const forecastData = useMemo(
+    () => forecast(plan, (m) => kapasitet(m).tilGjeld, currentMonthKey()),
+    [plan, kapasitet],
   );
-  const totalPaid = useMemo(
-    () =>
-      MONTH_KEYS.flatMap((k) => debtsFor(k, extra))
-        .filter((d) => paid.includes(d.id))
-        .reduce((s, d) => s + d.amount, 0),
-    [paid, extra],
-  );
-
-  const gjeldChart = useMemo(() => {
-    let rest = totalPlan;
-    return MONTH_KEYS.map((k) => {
-      rest -= monthResult(k, extra).gjeld;
-      return { month: shortMonthLabel(k), gjeld: Math.max(0, Math.round(rest)) };
-    });
-  }, [extra, totalPlan]);
-
-  const creditors = useMemo<CreditorSummary[]>(() => {
-    const map = new Map<
-      string,
-      CreditorSummary & { caseSet: Set<string>; paidCases: Set<string>; kidSet: Set<string> }
-    >();
-    MONTH_KEYS.forEach((k) => {
-      debtsFor(k, extra).forEach((d) => {
-        const cur =
-          map.get(d.creditor) ??
-          ({
-            creditor: d.creditor,
-            total: 0,
-            paid: 0,
-            cases: 0,
-            casesPaid: 0,
-            note: d.description,
-            target: shortMonthLabel(k),
-            caseNos: [],
-            kids: [],
-            urgent: false,
-            caseSet: new Set<string>(),
-            paidCases: new Set<string>(),
-            kidSet: new Set<string>(),
-          } as CreditorSummary & {
-            caseSet: Set<string>;
-            paidCases: Set<string>;
-            kidSet: Set<string>;
-          });
-        cur.total += d.amount;
-        cur.caseSet.add(d.caseNo);
-        if (d.kid) cur.kidSet.add(d.kid);
-        if (d.urgent) cur.urgent = true;
-        if (paid.includes(d.id)) {
-          cur.paid += d.amount;
-          cur.paidCases.add(d.caseNo);
-        }
-        cur.target = shortMonthLabel(k);
-        map.set(d.creditor, cur);
-      });
-    });
-    const lonn = map.get(LONNSTREKK_SAK.creditor);
-    if (lonn) {
-      lonn.total += LONNSTREKK_SAK.amount;
-      lonn.caseSet.add(LONNSTREKK_SAK.caseNo);
-    } else {
-      map.set(LONNSTREKK_SAK.creditor, {
-        creditor: LONNSTREKK_SAK.creditor,
-        total: LONNSTREKK_SAK.amount,
-        paid: 0,
-        cases: 1,
-        casesPaid: 0,
-        note: "Lønnstrekk via Namsfogden",
-        target: "feb.",
-        caseNos: [],
-        kids: [],
-        urgent: false,
-        caseSet: new Set([LONNSTREKK_SAK.caseNo]),
-        paidCases: new Set<string>(),
-        kidSet: new Set<string>(),
-      });
-    }
-    return [...map.values()]
-
-      .map((c) => ({
-        creditor: c.creditor,
-        total: c.total,
-        paid: c.paid,
-        cases: c.caseSet.size,
-        casesPaid: c.paidCases.size,
-        note: c.note,
-        target: c.target,
-        urgent: c.urgent,
-        caseNos: [...c.caseSet],
-        kids: [...c.kidSet],
-      }))
-      .sort((a, b) => b.total - a.total);
-  }, [extra, paid]);
+  const kapasitetNa = kapasitet(currentMonthKey());
+  const neste = nesteBesteBetaling(plan, kapasitetNa.tilGjeld);
+  const monthName = (key: string | null) => (key ? monthLabel(key) : "senere enn juni 2027");
 
   const buffer = MONTH_KEYS.map((k) => ({
     month: monthLabel(k),
@@ -279,10 +264,7 @@ function Index() {
   }));
 
   const reminders = useMemo(
-    () =>
-      current === currentMonthKey()
-        ? dueReminders(agenda, paid, settings.reminderDays)
-        : [],
+    () => (current === currentMonthKey() ? dueReminders(agenda, paid, settings.reminderDays) : []),
     [agenda, paid, settings.reminderDays, current],
   );
 
@@ -301,7 +283,15 @@ function Index() {
         ? `${formatNOK(Math.abs(leveStat.left))} over budsjettet denne måneden.`
         : `${leveStat.pct} % brukt (terskel ${leveStat.threshold} %). ${formatNOK(leveStat.left)} igjen.`,
     );
-  }, [ready, settings.notify, current, leveStat.level, leveStat.pct, leveStat.left, leveStat.threshold]);
+  }, [
+    ready,
+    settings.notify,
+    current,
+    leveStat.level,
+    leveStat.pct,
+    leveStat.left,
+    leveStat.threshold,
+  ]);
 
   const togglePaid = (id: string) => {
     const next = paid.includes(id) ? paid.filter((x) => x !== id) : [...paid, id];
@@ -335,13 +325,23 @@ function Index() {
       <main className="mx-auto max-w-2xl px-5 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
         {tab === "hjem" && (
           <HomeTab
-            daysLeft={daysUntilFree()}
-            remaining={Math.max(0, totalPlan - totalPaid)}
-            paid={totalPaid}
-            total={totalPlan}
+            estimertGjeld={estimertGjeld}
+            dokumentert={dokumentertTotal}
+            bekreftetBetalt={bekreftetBetalt}
+            ufordelt={ufordeltSum}
+            kvalitet={samletKvalitet}
+            forecastData={forecastData}
+            monthName={monthName}
+            neste={neste}
+            buffer={kapasitetNa}
             urgent={agenda.filter((i) => i.urgent && !paid.includes(i.id))}
             upcoming={agenda.filter((i) => !paid.includes(i.id) && !i.urgent).slice(0, 5)}
             reminders={reminders}
+            planOppdatert={planOppdatert}
+            onDismissUpdate={() => {
+              markUpdateSeen();
+              setPlanOppdatert(false);
+            }}
             onGo={(t) => setTab(t)}
           />
         )}
@@ -359,7 +359,21 @@ function Index() {
           />
         )}
 
-        {tab === "gjeld" && <GjeldTab chart={gjeldChart} creditors={creditors} />}
+        {tab === "gjeld" && (
+          <GjeldTab
+            kreditorer={kreditorer}
+            betalinger={plan.betalinger}
+            merknader={plan.merknader}
+            saker={plan.saker}
+            onFordel={setFordel}
+            onMerknad={(m) =>
+              updatePlan({
+                ...plan,
+                merknader: plan.merknader.map((x) => (x.id === m.id ? m : x)),
+              })
+            }
+          />
+        )}
 
         {tab === "budsjett" && (
           <BudsjettTab
@@ -369,10 +383,49 @@ function Index() {
             label={shortMonthLabel}
             longLabel={monthLabel(current)}
             meta={meta}
-            faste={budget.faste}
+            faste={fasteFor(current)}
             engangs={engangsOf(current, budget)}
             gjeld={res.gjeld}
             levepenger={leveBudget}
+            pendling={res.pendling}
+            extra={
+              <>
+                <PendlingCard
+                  scenarier={plan.pendling.scenarier}
+                  valgt={plan.pendling.valgt}
+                  onVelg={(id) =>
+                    updatePlan({ ...plan, pendling: { ...plan.pendling, valgt: id } })
+                  }
+                  onChange={(s) =>
+                    updatePlan({
+                      ...plan,
+                      pendling: {
+                        ...plan.pendling,
+                        scenarier: plan.pendling.scenarier.map((x) => (x.id === s.id ? s : x)),
+                      },
+                    })
+                  }
+                />
+                <ForpliktelserCard
+                  items={plan.forpliktelser}
+                  onChange={(f) =>
+                    updatePlan({
+                      ...plan,
+                      forpliktelser: plan.forpliktelser.map((x) => (x.id === f.id ? f : x)),
+                    })
+                  }
+                />
+                <AbonnementCard
+                  items={plan.abonnement}
+                  onChange={(a) =>
+                    updatePlan({
+                      ...plan,
+                      abonnement: plan.abonnement.map((x) => (x.id === a.id ? a : x)),
+                    })
+                  }
+                />
+              </>
+            }
             onEditIncome={() => setIncomeOpen(true)}
             onEditFast={(item) => setItemDialog({ kind: "fast", item })}
             onAddFast={() => setItemDialog({ kind: "fast", item: null })}
@@ -524,6 +577,18 @@ function Index() {
               ? removeEngangs(budget, current, id)
               : removeFast(budget, id),
           )
+        }
+      />
+
+      <FordelBetalingDialog
+        betaling={fordel}
+        saker={plan.saker}
+        onOpenChange={(v) => !v && setFordel(null)}
+        onSave={(b) =>
+          updatePlan({
+            ...plan,
+            betalinger: plan.betalinger.map((x) => (x.id === b.id ? b : x)),
+          })
         }
       />
     </div>

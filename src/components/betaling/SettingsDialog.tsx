@@ -37,7 +37,6 @@ export function SettingsDialog({ open, onOpenChange, settings, onSave, month, mo
       setPinValue(settings.pin ?? "");
       setPermission(notificationPermission());
     }
-
   }, [open, settings]);
 
   const num = (v: string) => Number(v.replace(",", ".")) || 0;

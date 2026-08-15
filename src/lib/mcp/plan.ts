@@ -7,6 +7,8 @@ import {
   MONTHS,
   type Debt,
 } from "@/lib/gjeldsplan";
+import { defaultPlanState } from "@/lib/gjeld/model";
+import { statusPerKreditor } from "@/lib/gjeld/motor";
 
 export const GJELDFRI_DATO = "2027-02-28";
 
@@ -43,35 +45,19 @@ export function totalPlan() {
 }
 
 export function creditorOverview() {
-  const map = new Map<
-    string,
-    { creditor: string; total: number; cases: Set<string>; kids: Set<string>; urgent: boolean }
-  >();
-  for (const d of DEBTS) {
-    const cur =
-      map.get(d.creditor) ??
-      { creditor: d.creditor, total: 0, cases: new Set<string>(), kids: new Set<string>(), urgent: false };
-    cur.total += d.amount;
-    cur.cases.add(d.caseNo);
-    if (d.kid) cur.kids.add(d.kid);
-    if (d.urgent) cur.urgent = true;
-    map.set(d.creditor, cur);
-  }
-  const lonn = map.get(LONNSTREKK_SAK.creditor);
-  if (lonn) {
-    lonn.total += LONNSTREKK_SAK.amount;
-    lonn.cases.add(LONNSTREKK_SAK.caseNo);
-  }
-  return [...map.values()]
-    .map((c) => ({
-      creditor: c.creditor,
-      total: c.total,
-      cases: c.cases.size,
-      caseNos: [...c.cases],
-      kids: [...c.kids],
-      urgent: c.urgent,
-    }))
-    .sort((a, b) => b.total - a.total);
+  const plan = defaultPlanState();
+  return statusPerKreditor(plan).map((k) => ({
+    creditor: k.creditor,
+    dokumentert: k.dokumentert,
+    bekreftetBetalt: k.bekreftetBetalt,
+    ufordelt: k.ufordelt,
+    estimert: k.estimert,
+    cases: k.saker.length,
+    caseNos: k.saker.map((s) => s.sak.caseNo),
+    kids: k.saker.map((s) => s.sak.kid).filter(Boolean),
+    datakvalitet: k.kvalitet,
+    urgent: k.urgent,
+  }));
 }
 
 export function daysUntilDebtFree(from = new Date()) {

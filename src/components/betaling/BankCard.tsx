@@ -12,14 +12,8 @@ import {
 import { DEBTS, type Debt } from "@/lib/gjeldsplan";
 import { loadPaid, savePaid } from "@/lib/betaling";
 import { formatNOK } from "@/lib/betaling";
-import {
-  appendSyncLog,
-  clearSyncLog,
-  loadSyncLog,
-  type SyncLogEntry,
-} from "@/lib/banklogg";
+import { appendSyncLog, clearSyncLog, loadSyncLog, type SyncLogEntry } from "@/lib/banklogg";
 import { monthRange } from "@/lib/periode";
-
 
 type BankSession = {
   sessionId: string;
@@ -67,11 +61,7 @@ type Match = {
 };
 
 /** Matcher transaksjoner mot gjeldsposter basert på beløp, KID eller navn. */
-function matchTransactions(
-  transactions: Tx[],
-  debts: Debt[],
-  alreadyPaid: string[],
-): Match[] {
+function matchTransactions(transactions: Tx[], debts: Debt[], alreadyPaid: string[]): Match[] {
   const matches: Match[] = [];
   const taken = new Set<string>();
   for (const tx of transactions) {
@@ -79,13 +69,9 @@ function matchTransactions(
     for (const debt of debts) {
       if (alreadyPaid.includes(debt.id) || taken.has(debt.id)) continue;
       const amountMatch = Math.abs(tx.amount - debt.amount) < 1;
-      const kidMatch = Boolean(
-        debt.kid && tx.ref && tx.ref.replace(/\s/g, "").includes(debt.kid),
-      );
+      const kidMatch = Boolean(debt.kid && tx.ref && tx.ref.replace(/\s/g, "").includes(debt.kid));
       const creditorMatch = Boolean(
-        debt.creditor &&
-          tx.text &&
-          tx.text.toLowerCase().includes(debt.creditor.toLowerCase()),
+        debt.creditor && tx.text && tx.text.toLowerCase().includes(debt.creditor.toLowerCase()),
       );
       if (!amountMatch && !kidMatch && !creditorMatch) continue;
       taken.add(debt.id);
@@ -104,9 +90,6 @@ function matchTransactions(
   }
   return matches;
 }
-
-
-
 
 export function BankCard({ month, monthLabel }: { month: string; monthLabel: string }) {
   const [session, setSession] = useState<BankSession | null>(null);
@@ -128,7 +111,6 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
   useEffect(() => {
     setLog(loadSyncLog());
   }, []);
-
 
   // Last eksisterende sesjon
   useEffect(() => {
@@ -203,9 +185,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
       // Preview-domener er ikke registrert, så bruk alltid produksjons-URL-en.
       const REGISTERED_ORIGIN = "https://agent-code-pal.lovable.app";
       const origin =
-        window.location.origin === REGISTERED_ORIGIN
-          ? window.location.origin
-          : REGISTERED_ORIGIN;
+        window.location.origin === REGISTERED_ORIGIN ? window.location.origin : REGISTERED_ORIGIN;
       const redirectUrl = `${origin}/bank/callback`;
       const state = crypto.randomUUID();
       window.localStorage.setItem("bank.auth.state", state);
@@ -294,11 +274,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
               direction: tx.credit_debit_indicator,
             };
             if (tx.booking_date) entry.date = tx.booking_date;
-            const text = [
-              tx.creditor?.name,
-              tx.debtor?.name,
-              ...(tx.remittance_information ?? []),
-            ]
+            const text = [tx.creditor?.name, tx.debtor?.name, ...(tx.remittance_information ?? [])]
               .filter(Boolean)
               .join(" ");
             if (text) entry.text = text;
@@ -317,9 +293,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
       if (matched.length > 0) {
         setPending(matched);
         setSelected(matched.map((m) => m.debtId));
-        setMatchResult(
-          `${matched.length} forslag klar til gjennomgang for ${monthLabel}`,
-        );
+        setMatchResult(`${matched.length} forslag klar til gjennomgang for ${monthLabel}`);
       } else {
         setPending([]);
         setSelected([]);
@@ -377,7 +351,10 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
         foundCount: pending.length,
         appliedCount: chosen.length,
         status: "ok",
-        note: chosen.map((m) => m.creditor).join(", ").slice(0, 140),
+        note: chosen
+          .map((m) => m.creditor)
+          .join(", ")
+          .slice(0, 140),
       }),
     );
     setPending([]);
@@ -401,7 +378,6 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
     setSelected([]);
     setMatchResult("Synk avbrutt – ingenting ble endret");
   };
-
 
   // Allerede koblet til
   if (session) {
@@ -433,19 +409,17 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
           {session.accounts.map((acc) => {
             const bal = balances[acc.uid]?.[0];
             return (
-            <div
-              key={acc.uid}
-              className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs"
-            >
-              <span className="truncate text-muted-foreground">
-                {acc.name || acc.iban || acc.uid.slice(0, 8)}
-              </span>
-              {bal?.amount && (
-                <span className="font-medium">
-                  {formatNOK(parseFloat(bal.amount))}
+              <div
+                key={acc.uid}
+                className="flex items-center justify-between rounded-lg bg-muted/40 px-3 py-2 text-xs"
+              >
+                <span className="truncate text-muted-foreground">
+                  {acc.name || acc.iban || acc.uid.slice(0, 8)}
                 </span>
-              )}
-            </div>
+                {bal?.amount && (
+                  <span className="font-medium">{formatNOK(parseFloat(bal.amount))}</span>
+                )}
+              </div>
             );
           })}
         </div>
@@ -458,11 +432,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
             disabled={loading || syncing}
             onClick={handleFetchBalances}
           >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Hent saldo"
-            )}
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Hent saldo"}
           </Button>
           <Button
             variant="secondary"
@@ -481,19 +451,16 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
         </div>
 
         <p className="mt-2 text-[11px] text-muted-foreground">
-          Synk henter kun transaksjoner for {monthLabel}. Ingenting hukes av før du
-          har godkjent forslagene.
+          Synk henter kun transaksjoner for {monthLabel}. Ingenting hukes av før du har godkjent
+          forslagene.
         </p>
 
         {/* Synksjekk – godkjenning før endring */}
         {pending.length > 0 && (
           <div className="mt-3 rounded-xl border border-primary/40 bg-primary/5 p-3">
-            <p className="text-xs font-semibold">
-              Sjekk før synk · {pending.length} forslag
-            </p>
+            <p className="text-xs font-semibold">Sjekk før synk · {pending.length} forslag</p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {txCount} transaksjon(er) lest for {monthLabel}. Velg hva som skal
-              hukes av.
+              {txCount} transaksjon(er) lest for {monthLabel}. Velg hva som skal hukes av.
             </p>
             <div className="mt-2 space-y-1.5">
               {pending.map((m) => {
@@ -512,18 +479,14 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
                     }`}
                   >
                     <span className="min-w-0">
-                      <span className="block truncate text-xs font-medium">
-                        {m.creditor}
-                      </span>
+                      <span className="block truncate text-xs font-medium">{m.creditor}</span>
                       <span className="block truncate text-[11px] text-muted-foreground">
                         {m.txDate ? `${m.txDate} · ` : ""}match på {m.reason}
                         {m.txText ? ` · ${m.txText}` : ""}
                       </span>
                     </span>
                     <span className="shrink-0 text-right">
-                      <span className="block text-xs font-semibold">
-                        {formatNOK(m.txAmount)}
-                      </span>
+                      <span className="block text-xs font-semibold">{formatNOK(m.txAmount)}</span>
                       {Math.abs(m.txAmount - m.debtAmount) >= 1 && (
                         <span className="block text-[10px] text-muted-foreground">
                           krav {formatNOK(m.debtAmount)}
@@ -568,14 +531,9 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
               <p className="text-[11px] text-muted-foreground">Ingen synk kjørt ennå.</p>
             )}
             {log.map((e) => (
-              <div
-                key={e.at}
-                className="rounded-lg bg-muted/40 px-3 py-2 text-[11px]"
-              >
+              <div key={e.at} className="rounded-lg bg-muted/40 px-3 py-2 text-[11px]">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium">
-                    {new Date(e.at).toLocaleString("nb-NO")}
-                  </span>
+                  <span className="font-medium">{new Date(e.at).toLocaleString("nb-NO")}</span>
                   <span
                     className={
                       e.status === "ok"
@@ -589,8 +547,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
                   </span>
                 </div>
                 <p className="text-muted-foreground">
-                  {e.month} · {e.txCount} tx · {e.foundCount} forslag ·{" "}
-                  {e.appliedCount} godkjent
+                  {e.month} · {e.txCount} tx · {e.foundCount} forslag · {e.appliedCount} godkjent
                 </p>
                 {e.note && <p className="truncate text-muted-foreground">{e.note}</p>}
               </div>
@@ -606,7 +563,6 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
             )}
           </div>
         )}
-
       </div>
     );
   }
@@ -618,8 +574,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
         <Building2 className="h-4 w-4 text-muted-foreground" /> Bankkobling
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        Koble til banken for automatisk avhuking av betalinger via Enable Banking
-        (PSD2).
+        Koble til banken for automatisk avhuking av betalinger via Enable Banking (PSD2).
       </p>
       <select
         className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
@@ -627,9 +582,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
         onChange={(e) => setSelectedBank(e.target.value)}
         disabled={loading}
       >
-        <option value="">
-          {banksLoaded ? "Velg bank…" : "Laster banker…"}
-        </option>
+        <option value="">{banksLoaded ? "Velg bank…" : "Laster banker…"}</option>
         {banks.map((b) => (
           <option key={b.name} value={b.name}>
             {b.name}
@@ -642,11 +595,7 @@ export function BankCard({ month, monthLabel }: { month: string; monthLabel: str
         disabled={loading || !selectedBank}
         onClick={handleConnect}
       >
-        {loading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          "Koble til bank"
-        )}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Koble til bank"}
       </Button>
     </div>
   );

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Plus, SquarePen } from "lucide-react";
 import { Avatar, Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
@@ -14,6 +15,8 @@ export function BudsjettTab({
   engangs,
   gjeld,
   levepenger,
+  pendling,
+  extra,
   onEditIncome,
   onEditFast,
   onAddFast,
@@ -25,11 +28,13 @@ export function BudsjettTab({
   onMonth: (m: string) => void;
   label: (m: string) => string;
   longLabel: string;
-  meta: { brutto: number; skatt: number; utleggstrekk: number; netto: number };
+  meta: { brutto: number; skatt: number; utleggstrekk: number; netto: number; actual?: boolean };
   faste: BudgetItem[];
   engangs: BudgetItem[];
   gjeld: number;
   levepenger: number;
+  pendling: number;
+  extra?: ReactNode;
   onEditIncome: () => void;
   onEditFast: (item: BudgetItem) => void;
   onAddFast: () => void;
@@ -38,11 +43,12 @@ export function BudsjettTab({
 }) {
   const fasteSum = faste.reduce((s, f) => s + f.amount, 0);
   const engangsSum = engangs.reduce((s, e) => s + e.amount, 0);
-  const rest = meta.netto - fasteSum - engangsSum - gjeld - levepenger;
+  const rest = meta.netto - fasteSum - engangsSum - gjeld - levepenger - pendling;
   const skattPct = meta.brutto ? Math.round((Math.abs(meta.skatt) / meta.brutto) * 100) : 0;
   const parts = [
     { label: "Faste utgifter", value: fasteSum, color: "var(--color-chart-3)" },
     { label: "Levepenger", value: levepenger, color: "var(--color-chart-5)" },
+    { label: "Pendling", value: pendling, color: "var(--color-chart-1)" },
     { label: "Engangs", value: engangsSum, color: "var(--color-chart-4)" },
     { label: "Gjeldsnedbetaling", value: gjeld, color: "var(--color-chart-2)" },
     { label: "Til rådighet", value: Math.max(0, rest), color: "var(--color-muted-foreground)" },
@@ -66,19 +72,27 @@ export function BudsjettTab({
           </button>
         </div>
         <p className="mt-2 text-4xl font-bold tabular-nums">{formatNOK(meta.netto)}</p>
-        <p className="text-sm text-muted-foreground">Netto tilgjengelig</p>
+        <p className="text-sm text-muted-foreground">
+          Netto tilgjengelig ·{" "}
+          <span className={meta.actual ? "font-semibold text-primary" : ""}>
+            {meta.actual ? "FAKTISK registrert" : "forecast"}
+          </span>
+        </p>
 
         <dl className="mt-5 space-y-2.5 text-sm">
           <Row label="Bruttolønn" value={formatNOK(meta.brutto)} />
           <Row label={`Skattetrekk (${skattPct}%)`} value={formatNOK(meta.skatt)} negative />
           <Row
-            label="Utleggstrekk (Namsfogden)"
+            label="Utleggstrekk (gjennomført)"
             value={formatNOK(meta.utleggstrekk)}
             negative={meta.utleggstrekk !== 0}
           />
           <div className="h-px bg-border" />
           <Row label="Netto" value={formatNOK(meta.netto)} strong />
         </dl>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Utleggstrekk trekkes kun fra når du har markert det som gjennomført.
+        </p>
       </Card>
 
       <Card className="p-5">
@@ -101,13 +115,20 @@ export function BudsjettTab({
         </ul>
       </Card>
 
+      {extra}
+
       <div className="flex items-center justify-between gap-2">
         <SectionTitle>Faste utgifter</SectionTitle>
         <AddButton onClick={onAddFast} />
       </div>
       <div className="space-y-3">
         {faste.map((f) => (
-          <ItemCard key={f.id} item={f} sub={`Forfaller den ${f.day}.`} onEdit={() => onEditFast(f)} />
+          <ItemCard
+            key={f.id}
+            item={f}
+            sub={`Forfaller den ${f.day}.`}
+            onEdit={() => onEditFast(f)}
+          />
         ))}
         {faste.length === 0 && (
           <p className="px-1 text-sm text-muted-foreground">Ingen faste utgifter lagt inn.</p>
@@ -153,15 +174,7 @@ function AddButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function ItemCard({
-  item,
-  sub,
-  onEdit,
-}: {
-  item: BudgetItem;
-  sub?: string;
-  onEdit: () => void;
-}) {
+function ItemCard({ item, sub, onEdit }: { item: BudgetItem; sub?: string; onEdit: () => void }) {
   return (
     <Card>
       <button type="button" onClick={onEdit} className="flex w-full items-center gap-3 text-left">

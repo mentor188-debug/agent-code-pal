@@ -58,7 +58,9 @@ export function KalenderTab({
                   onClick={() => onEdit(i)}
                   className="min-w-0 flex-1 text-left"
                 >
-                  <p className={`truncate text-[15px] font-semibold ${isPaid ? "line-through" : ""}`}>
+                  <p
+                    className={`truncate text-[15px] font-semibold ${isPaid ? "line-through" : ""}`}
+                  >
                     {i.name}
                   </p>
                   <p className="flex items-center gap-2 text-xs text-muted-foreground">

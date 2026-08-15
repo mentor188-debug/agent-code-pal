@@ -51,7 +51,9 @@ export function SparingTab({
         </p>
       </Card>
 
-      <SectionTitle icon={<Shield className="size-4 text-primary" />}>Buffer per måned</SectionTitle>
+      <SectionTitle icon={<Shield className="size-4 text-primary" />}>
+        Buffer per måned
+      </SectionTitle>
       <div className="space-y-3">
         {monthlyBuffer.map((m) => (
           <Card key={m.month}>

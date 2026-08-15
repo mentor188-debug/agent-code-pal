@@ -46,7 +46,7 @@ export const saveSettings = (v: Settings) =>
 export const MONTH_KEYS: string[] = MONTHS.map((m) => m.key);
 
 export function monthMeta(key: string) {
-  return MONTHS.find((m) => m.key === key) ?? MONTHS[0];
+  return MONTHS.find((m) => m.key === key) ?? (MONTHS[0] as (typeof MONTHS)[number]);
 }
 
 function parseKey(key: string): [number, number] {
@@ -73,8 +73,9 @@ export function currentMonthKey() {
   return MONTH_KEYS.includes(k) ? k : (MONTH_KEYS[0] as string);
 }
 
-export function debtsFor(key: string, extra: Debt[]) {
-  return [...DEBTS, ...extra].filter((d) => d.month === key);
+/** `base` er planpostene motoren har generert; DEBTS er kun arkiv fra gammel plan. */
+export function debtsFor(key: string, extra: Debt[], base: Debt[] = DEBTS) {
+  return [...base, ...extra].filter((d) => d.month === key);
 }
 
 export function fasteSum() {
@@ -85,9 +86,14 @@ export function engangsFor(key: string) {
   return ENGANGS[key] ?? [];
 }
 
-export function monthResult(key: string, extra: Debt[], levepenger = LEVEPENGER_BUDSJETT) {
+export function monthResult(
+  key: string,
+  extra: Debt[],
+  levepenger = LEVEPENGER_BUDSJETT,
+  base: Debt[] = DEBTS,
+) {
   const meta = monthMeta(key);
-  const gjeld = debtsFor(key, extra).reduce((s, d) => s + d.amount, 0);
+  const gjeld = debtsFor(key, extra, base).reduce((s, d) => s + d.amount, 0);
   const engangs = engangsFor(key).reduce((s, e) => s + e.amount, 0);
   const faste = fasteSum();
   return {
@@ -96,7 +102,7 @@ export function monthResult(key: string, extra: Debt[], levepenger = LEVEPENGER_
     engangs,
     gjeld,
     levepenger,
-    manuelt: debtsFor(key, extra)
+    manuelt: debtsFor(key, extra, base)
       .filter((d) => !d.auto)
       .reduce((s, d) => s + d.amount, 0),
     resultat: meta.netto - faste - engangs - gjeld - levepenger,
