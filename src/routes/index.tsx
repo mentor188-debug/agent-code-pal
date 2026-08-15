@@ -570,6 +570,18 @@ function Index() {
           )
         }
       />
+
+      <FordelBetalingDialog
+        betaling={fordel}
+        saker={plan.saker}
+        onOpenChange={(v) => !v && setFordel(null)}
+        onSave={(b) =>
+          updatePlan({
+            ...plan,
+            betalinger: plan.betalinger.map((x) => (x.id === b.id ? b : x)),
+          })
+        }
+      />
     </div>
   );
 }
