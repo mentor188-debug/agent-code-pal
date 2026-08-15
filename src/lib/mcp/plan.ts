@@ -7,6 +7,8 @@ import {
   MONTHS,
   type Debt,
 } from "@/lib/gjeldsplan";
+import { defaultPlanState } from "@/lib/gjeld/model";
+import { statusPerKreditor } from "@/lib/gjeld/motor";
 
 export const GJELDFRI_DATO = "2027-02-28";
 
