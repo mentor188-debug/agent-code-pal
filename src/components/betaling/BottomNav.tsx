@@ -1,6 +1,7 @@
 import { Calendar, Coins, Home, Shield, ShoppingBasket, TrendingDown, Wallet } from "lucide-react";
 
-export type TabKey = "hjem" | "kalender" | "gjeld" | "budsjett" | "levepenger" | "saldo" | "sparing";
+export type TabKey =
+  "hjem" | "kalender" | "gjeld" | "budsjett" | "levepenger" | "saldo" | "sparing";
 
 const TABS: { key: TabKey; label: string; icon: typeof Home }[] = [
   { key: "hjem", label: "Hjem", icon: Home },

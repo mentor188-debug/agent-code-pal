@@ -81,9 +81,7 @@ export function LevepengerTab({
           </button>
         </div>
 
-        <p
-          className={`mt-2 text-4xl font-bold tabular-nums ${left < 0 ? "text-destructive" : ""}`}
-        >
+        <p className={`mt-2 text-4xl font-bold tabular-nums ${left < 0 ? "text-destructive" : ""}`}>
           {formatNOK(left)}
         </p>
         <p className="text-sm text-muted-foreground">Igjen av {formatNOK(available)}</p>

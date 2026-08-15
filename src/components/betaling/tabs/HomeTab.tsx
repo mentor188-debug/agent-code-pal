@@ -118,7 +118,9 @@ export function HomeTab({
               </p>
             </>
           ) : (
-            <p className="mt-1 text-sm text-muted-foreground">Ingen åpne saker med estimert saldo.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ingen åpne saker med estimert saldo.
+            </p>
           )}
         </Card>
 

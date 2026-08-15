@@ -58,7 +58,8 @@ export function IncomeDialog({
           <div className="rounded-xl bg-secondary px-4 py-3 text-sm">
             Netto:{" "}
             <span className="font-semibold tabular-nums">
-              {Math.round(draft.brutto + draft.skatt + draft.utleggstrekk).toLocaleString("nb-NO")} kr
+              {Math.round(draft.brutto + draft.skatt + draft.utleggstrekk).toLocaleString("nb-NO")}{" "}
+              kr
             </span>
           </div>
         </div>

@@ -447,14 +447,44 @@ export const DEFAULT_FORPLIKTELSER: Forpliktelse[] = [
 ];
 
 export const DEFAULT_ABONNEMENT: Abonnement[] = [
-  { id: "ab-talkmore-1", name: "Talkmore (trekk 1, 14.08)", amount: 634.27, klasse: null, note: "3 trekk samme dag – er alle dine?" },
-  { id: "ab-talkmore-2", name: "Talkmore (trekk 2, 14.08)", amount: 558.58, klasse: null, note: "3 trekk samme dag – er alle dine?" },
-  { id: "ab-talkmore-3", name: "Talkmore (trekk 3, 14.08)", amount: 522.2, klasse: null, note: "3 trekk samme dag – er alle dine?" },
+  {
+    id: "ab-talkmore-1",
+    name: "Talkmore (trekk 1, 14.08)",
+    amount: 634.27,
+    klasse: null,
+    note: "3 trekk samme dag – er alle dine?",
+  },
+  {
+    id: "ab-talkmore-2",
+    name: "Talkmore (trekk 2, 14.08)",
+    amount: 558.58,
+    klasse: null,
+    note: "3 trekk samme dag – er alle dine?",
+  },
+  {
+    id: "ab-talkmore-3",
+    name: "Talkmore (trekk 3, 14.08)",
+    amount: 522.2,
+    klasse: null,
+    note: "3 trekk samme dag – er alle dine?",
+  },
   { id: "ab-netflix", name: "Netflix", amount: 219, klasse: null, note: "Observert juli" },
   { id: "ab-prime", name: "Prime Video", amount: 79, klasse: null, note: "Observert tidligere" },
-  { id: "ab-tv2", name: "TV 2", amount: 0, klasse: null, note: "Variable trekk observert – legg inn beløp" },
+  {
+    id: "ab-tv2",
+    name: "TV 2",
+    amount: 0,
+    klasse: null,
+    note: "Variable trekk observert – legg inn beløp",
+  },
   { id: "ab-chatgpt", name: "ChatGPT", amount: 0, klasse: null, note: "Legg inn beløp hvis fast" },
-  { id: "ab-apple", name: "Apple / Microsoft og små digitale kjøp", amount: 0, klasse: null, note: "Klassifiser før det tas inn som fast kost" },
+  {
+    id: "ab-apple",
+    name: "Apple / Microsoft og små digitale kjøp",
+    amount: 0,
+    klasse: null,
+    note: "Klassifiser før det tas inn som fast kost",
+  },
 ];
 
 export const DEFAULT_PENDLING: PlanState["pendling"] = {
@@ -464,7 +494,8 @@ export const DEFAULT_PENDLING: PlanState["pendling"] = {
       id: "vestby",
       name: "Vestby stasjon",
       kollektiv: 2198,
-      kollektivNote: "Ruter 30 dager voksen, alle soner / 3+ soner. Verifiser i Ruter/Vy reiseplanlegger.",
+      kollektivNote:
+        "Ruter 30 dager voksen, alle soner / 3+ soner. Verifiser i Ruter/Vy reiseplanlegger.",
       parkering: 100,
       parkeringNote:
         "Bane NOR pendlerparkering 100 kr/30 dager (250 kr BYPRIS). Vestby-siden viser ikke kategorien eksplisitt – verifiser i Bane NOR Parkering. Dagparkering er 40 kr/døgn, 224 plasser.",

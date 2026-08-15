@@ -24,7 +24,11 @@ export type KreditorStatus = {
 
 const DAG = 86400000;
 
-export function datakvalitet(sak: Sak, harBetalinger: boolean, now = new Date()): {
+export function datakvalitet(
+  sak: Sak,
+  harBetalinger: boolean,
+  now = new Date(),
+): {
   kvalitet: Datakvalitet;
   tekst: string;
 } {

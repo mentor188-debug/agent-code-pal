@@ -55,7 +55,6 @@ export function BudsjettTab({
   ].filter((p) => p.value > 0);
   const partsSum = parts.reduce((s, p) => s + p.value, 0) || 1;
 
-
   return (
     <div className="space-y-4">
       <PageTitle>Budsjett</PageTitle>
@@ -96,7 +95,6 @@ export function BudsjettTab({
         </p>
       </Card>
 
-
       <Card className="p-5">
         <h2 className="font-semibold">Fordeling av netto</h2>
         <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-secondary">
@@ -119,15 +117,18 @@ export function BudsjettTab({
 
       {extra}
 
-
-
       <div className="flex items-center justify-between gap-2">
         <SectionTitle>Faste utgifter</SectionTitle>
         <AddButton onClick={onAddFast} />
       </div>
       <div className="space-y-3">
         {faste.map((f) => (
-          <ItemCard key={f.id} item={f} sub={`Forfaller den ${f.day}.`} onEdit={() => onEditFast(f)} />
+          <ItemCard
+            key={f.id}
+            item={f}
+            sub={`Forfaller den ${f.day}.`}
+            onEdit={() => onEditFast(f)}
+          />
         ))}
         {faste.length === 0 && (
           <p className="px-1 text-sm text-muted-foreground">Ingen faste utgifter lagt inn.</p>
@@ -173,15 +174,7 @@ function AddButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function ItemCard({
-  item,
-  sub,
-  onEdit,
-}: {
-  item: BudgetItem;
-  sub?: string;
-  onEdit: () => void;
-}) {
+function ItemCard({ item, sub, onEdit }: { item: BudgetItem; sub?: string; onEdit: () => void }) {
   return (
     <Card>
       <button type="button" onClick={onEdit} className="flex w-full items-center gap-3 text-left">

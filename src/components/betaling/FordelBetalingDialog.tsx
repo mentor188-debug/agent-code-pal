@@ -28,9 +28,9 @@ export function FordelBetalingDialog({
   }, [betaling]);
 
   const kandidater = betaling
-    ? saker.filter((s) => s.creditor === betaling.creditor).concat(
-        saker.filter((s) => s.creditor !== betaling.creditor),
-      )
+    ? saker
+        .filter((s) => s.creditor === betaling.creditor)
+        .concat(saker.filter((s) => s.creditor !== betaling.creditor))
     : [];
 
   return (

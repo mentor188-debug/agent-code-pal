@@ -17,7 +17,12 @@ import { AbonnementCard } from "@/components/betaling/AbonnementCard";
 import { ForpliktelserCard } from "@/components/betaling/ForpliktelserCard";
 import { FordelBetalingDialog } from "@/components/betaling/FordelBetalingDialog";
 import { loadPlan, markUpdateSeen, savePlan, shouldAnnounceUpdate } from "@/lib/gjeld/store";
-import { defaultPlanState, pendlingTotal, type PlanState, type RegistrertBetaling } from "@/lib/gjeld/model";
+import {
+  defaultPlanState,
+  pendlingTotal,
+  type PlanState,
+  type RegistrertBetaling,
+} from "@/lib/gjeld/model";
 import {
   byggPlan,
   forecast,
@@ -150,7 +155,6 @@ function Index() {
     savePlan(next);
   };
 
-
   const meta = incomeFor(current, budget);
   const leveBudget = budgetFor(current, liveBudgets);
   const leveCarry = carryOverFor(current, MONTH_KEYS, liveCosts, liveBudgets, currentMonthKey());
@@ -254,17 +258,13 @@ function Index() {
   const neste = nesteBesteBetaling(plan, kapasitetNa.tilGjeld);
   const monthName = (key: string | null) => (key ? monthLabel(key) : "senere enn juni 2027");
 
-
   const buffer = MONTH_KEYS.map((k) => ({
     month: monthLabel(k),
     value: Math.round(resultFor(k).resultat),
   }));
 
   const reminders = useMemo(
-    () =>
-      current === currentMonthKey()
-        ? dueReminders(agenda, paid, settings.reminderDays)
-        : [],
+    () => (current === currentMonthKey() ? dueReminders(agenda, paid, settings.reminderDays) : []),
     [agenda, paid, settings.reminderDays, current],
   );
 
@@ -283,7 +283,15 @@ function Index() {
         ? `${formatNOK(Math.abs(leveStat.left))} over budsjettet denne måneden.`
         : `${leveStat.pct} % brukt (terskel ${leveStat.threshold} %). ${formatNOK(leveStat.left)} igjen.`,
     );
-  }, [ready, settings.notify, current, leveStat.level, leveStat.pct, leveStat.left, leveStat.threshold]);
+  }, [
+    ready,
+    settings.notify,
+    current,
+    leveStat.level,
+    leveStat.pct,
+    leveStat.left,
+    leveStat.threshold,
+  ]);
 
   const togglePaid = (id: string) => {
     const next = paid.includes(id) ? paid.filter((x) => x !== id) : [...paid, id];
@@ -385,7 +393,9 @@ function Index() {
                 <PendlingCard
                   scenarier={plan.pendling.scenarier}
                   valgt={plan.pendling.valgt}
-                  onVelg={(id) => updatePlan({ ...plan, pendling: { ...plan.pendling, valgt: id } })}
+                  onVelg={(id) =>
+                    updatePlan({ ...plan, pendling: { ...plan.pendling, valgt: id } })
+                  }
                   onChange={(s) =>
                     updatePlan({
                       ...plan,
@@ -423,7 +433,6 @@ function Index() {
             onAddEngangs={() => setItemDialog({ kind: "engangs", item: null })}
           />
         )}
-
 
         {tab === "levepenger" && (
           <LevepengerTab
