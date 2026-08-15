@@ -56,8 +56,8 @@ export function creditorOverview() {
     caseNos: k.saker.map((s) => s.sak.caseNo),
     kids: k.saker.map((s) => s.sak.kid).filter(Boolean),
     datakvalitet: k.kvalitet,
-    sistVerifisert: k.sistVerifisert,
-    urgent: k.saker.some((s) => s.sak.juridisk),
+    urgent: k.urgent,
+
   }));
 }
 
