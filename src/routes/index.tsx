@@ -426,7 +426,7 @@ function Index() {
             items={agenda}
             paidIds={paid}
             leveAvailable={leveBudget + leveCarry}
-            leveSpent={leveCosts.reduce((s, c) => s + c.amount, 0)}
+            leveCosts={leveCosts}
             onToggle={togglePaid}
           />
         )}

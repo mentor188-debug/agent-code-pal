@@ -18,6 +18,7 @@ import {
   loadSyncLog,
   type SyncLogEntry,
 } from "@/lib/banklogg";
+import { monthRange } from "@/lib/periode";
 
 
 type BankSession = {
@@ -105,12 +106,7 @@ function matchTransactions(
 }
 
 
-function monthRange(month: string) {
-  const [y, m] = month.split("-").map(Number);
-  const first = new Date(Date.UTC(y!, m! - 1, 1));
-  const last = new Date(Date.UTC(y!, m!, 0));
-  return { from: first.toISOString().slice(0, 10), to: last.toISOString().slice(0, 10) };
-}
+
 
 export function BankCard({ month, monthLabel }: { month: string; monthLabel: string }) {
   const [session, setSession] = useState<BankSession | null>(null);
