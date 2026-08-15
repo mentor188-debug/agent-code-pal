@@ -317,13 +317,23 @@ function Index() {
       <main className="mx-auto max-w-2xl px-5 pb-[calc(8.5rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))]">
         {tab === "hjem" && (
           <HomeTab
-            daysLeft={daysUntilFree()}
-            remaining={Math.max(0, totalPlan - totalPaid)}
-            paid={totalPaid}
-            total={totalPlan}
+            estimertGjeld={estimertGjeld}
+            dokumentert={dokumentertTotal}
+            bekreftetBetalt={bekreftetBetalt}
+            ufordelt={ufordeltSum}
+            kvalitet={samletKvalitet}
+            forecastData={forecastData}
+            monthName={monthName}
+            neste={neste}
+            buffer={kapasitetNa}
             urgent={agenda.filter((i) => i.urgent && !paid.includes(i.id))}
             upcoming={agenda.filter((i) => !paid.includes(i.id) && !i.urgent).slice(0, 5)}
             reminders={reminders}
+            planOppdatert={planOppdatert}
+            onDismissUpdate={() => {
+              markUpdateSeen();
+              setPlanOppdatert(false);
+            }}
             onGo={(t) => setTab(t)}
           />
         )}
@@ -341,7 +351,21 @@ function Index() {
           />
         )}
 
-        {tab === "gjeld" && <GjeldTab chart={gjeldChart} creditors={creditors} />}
+        {tab === "gjeld" && (
+          <GjeldTab
+            kreditorer={kreditorer}
+            betalinger={plan.betalinger}
+            merknader={plan.merknader}
+            saker={plan.saker}
+            onFordel={setFordel}
+            onMerknad={(m) =>
+              updatePlan({
+                ...plan,
+                merknader: plan.merknader.map((x) => (x.id === m.id ? m : x)),
+              })
+            }
+          />
+        )}
 
         {tab === "budsjett" && (
           <BudsjettTab
@@ -351,10 +375,47 @@ function Index() {
             label={shortMonthLabel}
             longLabel={monthLabel(current)}
             meta={meta}
-            faste={budget.faste}
+            faste={fasteFor(current)}
             engangs={engangsOf(current, budget)}
             gjeld={res.gjeld}
             levepenger={leveBudget}
+            pendling={res.pendling}
+            extra={
+              <>
+                <PendlingCard
+                  scenarier={plan.pendling.scenarier}
+                  valgt={plan.pendling.valgt}
+                  onVelg={(id) => updatePlan({ ...plan, pendling: { ...plan.pendling, valgt: id } })}
+                  onChange={(s) =>
+                    updatePlan({
+                      ...plan,
+                      pendling: {
+                        ...plan.pendling,
+                        scenarier: plan.pendling.scenarier.map((x) => (x.id === s.id ? s : x)),
+                      },
+                    })
+                  }
+                />
+                <ForpliktelserCard
+                  items={plan.forpliktelser}
+                  onChange={(f) =>
+                    updatePlan({
+                      ...plan,
+                      forpliktelser: plan.forpliktelser.map((x) => (x.id === f.id ? f : x)),
+                    })
+                  }
+                />
+                <AbonnementCard
+                  items={plan.abonnement}
+                  onChange={(a) =>
+                    updatePlan({
+                      ...plan,
+                      abonnement: plan.abonnement.map((x) => (x.id === a.id ? a : x)),
+                    })
+                  }
+                />
+              </>
+            }
             onEditIncome={() => setIncomeOpen(true)}
             onEditFast={(item) => setItemDialog({ kind: "fast", item })}
             onAddFast={() => setItemDialog({ kind: "fast", item: null })}
@@ -362,6 +423,7 @@ function Index() {
             onAddEngangs={() => setItemDialog({ kind: "engangs", item: null })}
           />
         )}
+
 
         {tab === "levepenger" && (
           <LevepengerTab
