@@ -1,7 +1,10 @@
-import { CheckCircle2, Circle, Coins, ShoppingBasket, Wallet } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Banknote, CheckCircle2, Circle, Coins, ShoppingBasket, Wallet } from "lucide-react";
 import { Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
+import { loadActual, saveActual } from "@/lib/saldo";
 import type { AgendaItem } from "@/lib/dager";
+
 
 export function SaldoTab({
   months,
