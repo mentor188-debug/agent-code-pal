@@ -57,10 +57,8 @@ export function creditorOverview() {
     kids: k.saker.map((s) => s.sak.kid).filter(Boolean),
     datakvalitet: k.kvalitet,
     urgent: k.urgent,
-
   }));
 }
-
 
 export function daysUntilDebtFree(from = new Date()) {
   const target = new Date(GJELDFRI_DATO + "T00:00:00Z");
