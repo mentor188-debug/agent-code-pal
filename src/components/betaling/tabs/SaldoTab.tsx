@@ -208,6 +208,45 @@ export function SaldoTab({
 
       <Card className="p-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Wallet className="size-4 text-primary" /> Inngående saldo ved månedsstart
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            inputMode="decimal"
+            value={startDraft}
+            onChange={(e) => setStartDraft(e.target.value)}
+            onBlur={commitStart}
+            placeholder="f.eks. 3200"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-secondary px-3 text-base tabular-nums outline-none focus:border-primary"
+          />
+          <button
+            type="button"
+            onClick={commitStart}
+            className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground active:scale-95"
+          >
+            Lagre
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={toggleLonn}
+          className="mt-3 flex w-full items-center justify-between rounded-xl border border-border bg-secondary px-3 py-3 text-left text-sm active:scale-[0.99]"
+        >
+          <span>Lønnen er kommet inn på konto</span>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-medium ${lonnMottatt ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+          >
+            {lonnMottatt ? "Ja" : "Nei"}
+          </span>
+        </button>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Det som stod på konto da måneden startet, pluss om lønnen faktisk har kommet. Uten disse
+          to blir «Igjen» alltid ulik banken.
+        </p>
+      </Card>
+
+      <Card className="p-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Banknote className="size-4 text-primary" /> Faktisk saldo i banken
         </div>
         <div className="mt-3 flex items-center gap-2">
