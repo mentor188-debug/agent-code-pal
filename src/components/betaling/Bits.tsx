@@ -36,6 +36,29 @@ export function PageTitle({ children }: { children: ReactNode }) {
   );
 }
 
+export function KvalitetBadge({
+  level,
+  text,
+}: {
+  level: "gronn" | "gul" | "rod";
+  text?: string;
+}) {
+  const map = {
+    gronn: { cls: "bg-primary/15 text-primary", label: "Verifisert" },
+    gul: { cls: "bg-chart-4/20 text-chart-4", label: "Estimat" },
+    rod: { cls: "bg-destructive/20 text-destructive", label: "Må avklares" },
+  } as const;
+  const m = map[level];
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${m.cls}`}
+    >
+      <span className="size-1.5 rounded-full bg-current" />
+      {text ?? m.label}
+    </span>
+  );
+}
+
 export function MonthChips({
   months,
   value,

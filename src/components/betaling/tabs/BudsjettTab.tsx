@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Plus, SquarePen } from "lucide-react";
 import { Avatar, Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
@@ -14,6 +15,8 @@ export function BudsjettTab({
   engangs,
   gjeld,
   levepenger,
+  pendling,
+  extra,
   onEditIncome,
   onEditFast,
   onAddFast,
@@ -25,11 +28,13 @@ export function BudsjettTab({
   onMonth: (m: string) => void;
   label: (m: string) => string;
   longLabel: string;
-  meta: { brutto: number; skatt: number; utleggstrekk: number; netto: number };
+  meta: { brutto: number; skatt: number; utleggstrekk: number; netto: number; actual?: boolean };
   faste: BudgetItem[];
   engangs: BudgetItem[];
   gjeld: number;
   levepenger: number;
+  pendling: number;
+  extra?: ReactNode;
   onEditIncome: () => void;
   onEditFast: (item: BudgetItem) => void;
   onAddFast: () => void;
@@ -38,16 +43,18 @@ export function BudsjettTab({
 }) {
   const fasteSum = faste.reduce((s, f) => s + f.amount, 0);
   const engangsSum = engangs.reduce((s, e) => s + e.amount, 0);
-  const rest = meta.netto - fasteSum - engangsSum - gjeld - levepenger;
+  const rest = meta.netto - fasteSum - engangsSum - gjeld - levepenger - pendling;
   const skattPct = meta.brutto ? Math.round((Math.abs(meta.skatt) / meta.brutto) * 100) : 0;
   const parts = [
     { label: "Faste utgifter", value: fasteSum, color: "var(--color-chart-3)" },
     { label: "Levepenger", value: levepenger, color: "var(--color-chart-5)" },
+    { label: "Pendling", value: pendling, color: "var(--color-chart-1)" },
     { label: "Engangs", value: engangsSum, color: "var(--color-chart-4)" },
     { label: "Gjeldsnedbetaling", value: gjeld, color: "var(--color-chart-2)" },
     { label: "Til rådighet", value: Math.max(0, rest), color: "var(--color-muted-foreground)" },
   ].filter((p) => p.value > 0);
   const partsSum = parts.reduce((s, p) => s + p.value, 0) || 1;
+
 
   return (
     <div className="space-y-4">

@@ -12,35 +12,71 @@ export type Debt = {
   urgent: boolean;
 };
 
-export const MONTHS = [
-  { key: "2026-08", brutto: 117557, skatt: -28213.68, utleggstrekk: -12400, netto: 76943.32 },
-  { key: "2026-09", brutto: 51200, skatt: -16384, utleggstrekk: -8947, netto: 25869 },
-  { key: "2026-10", brutto: 51200, skatt: -16384, utleggstrekk: 0, netto: 34816 },
-  { key: "2026-11", brutto: 51200, skatt: -16384, utleggstrekk: 0, netto: 34816 },
-  { key: "2026-12", brutto: 51200, skatt: -16384, utleggstrekk: 0, netto: 34816 },
-  { key: "2027-01", brutto: 41666, skatt: -12499.8, utleggstrekk: 0, netto: 29166.2 },
-  { key: "2027-02", brutto: 41666, skatt: -12499.8, utleggstrekk: 0, netto: 29166.2 },
-] as const;
+export type MonthMeta = {
+  key: string;
+  brutto: number;
+  skatt: number;
+  /** Utleggstrekk er en egen forpliktelse – trekkes ikke automatisk fra lønn. */
+  utleggstrekk: number;
+  netto: number;
+  skattPct: number;
+  /** true = faktisk registrert netto, false = forecast. */
+  actual: boolean;
+};
+
+function forecastMonth(key: string, brutto: number, skattPct: number): MonthMeta {
+  const s = -(brutto * skattPct) / 100;
+  return {
+    key,
+    brutto,
+    skatt: Math.round(s * 100) / 100,
+    utleggstrekk: 0,
+    netto: Math.round((brutto + s) * 100) / 100,
+    skattPct,
+    actual: false,
+  };
+}
+
+export const MONTHS: MonthMeta[] = [
+  {
+    key: "2026-08",
+    brutto: 117557,
+    skatt: -28861.56,
+    utleggstrekk: 0,
+    // Faktisk registrerte netto lønnsinnbetalinger:
+    // Grønn Jobb 49 818,77 + Ztl Payment Solution 38 876,67
+    netto: 88695.44,
+    skattPct: 0,
+    actual: true,
+  },
+  forecastMonth("2026-09", 51666, 32),
+  forecastMonth("2026-10", 51666, 32),
+  forecastMonth("2026-11", 51666, 32),
+  forecastMonth("2026-12", 51666, 32),
+  forecastMonth("2027-01", 41666, 30),
+  forecastMonth("2027-02", 41666, 30),
+  forecastMonth("2027-03", 41666, 30),
+  forecastMonth("2027-04", 41666, 30),
+  forecastMonth("2027-05", 41666, 30),
+  forecastMonth("2027-06", 41666, 30),
+];
 
 /** Månedlig levepenger-ramme – håndteres i egen Levepenger-modul, ikke som betaling. */
 export const LEVEPENGER_BUDSJETT = 5000;
 
 export const FASTE = [
-  { name: "Billån (12,26 % – refinansier når fila er ren)", amount: 3548, day: 20 },
+  { name: "Billån", amount: 3565, day: 20 },
   { name: "Lånekassen", amount: 1800, day: 20 },
-  { name: "Tryg forsikring", amount: 2280, day: 3 },
+  { name: "Tryg forsikring", amount: 2238, day: 3 },
+  { name: "Resurs (avdrag t.o.m. des. 2026)", amount: 2800, day: 20 },
 ] as const;
 
 export const ENGANGS: Record<string, { name: string; amount: number }[]> = {
-  "2026-08": [
-    { name: "ADHD-utredning", amount: 4800 },
-    { name: "Ferie Skiathos", amount: 12500 },
-    { name: "Gave", amount: 5000 },
-  ],
-  "2026-09": [{ name: "PC-skjerm", amount: 4800 }],
+  "2026-08": [{ name: "ADHD-utredning", amount: 4800 }],
 };
 
-export const LONNSTREKK_SAK = { caseNo: "666130322", creditor: "Kredinor", amount: 39582 };
+export const LONNSTREKK_SAK = { caseNo: "666130322", creditor: "Kredinor", amount: 39299.44 };
+
 
 export const DEBTS: Debt[] = [
   {
