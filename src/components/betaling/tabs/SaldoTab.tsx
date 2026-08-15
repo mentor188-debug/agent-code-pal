@@ -165,8 +165,35 @@ export function SaldoTab({
         <p className="text-sm text-muted-foreground">
           {actual !== undefined
             ? `Faktisk saldo i banken · beregnet var ${formatNOK(beregnet)}`
-            : `Netto ${formatNOK(netto)} minus det du faktisk har betalt`}
+            : `Inngående saldo ${formatNOK(start)}${lonnMottatt ? ` + lønn ${formatNOK(netto)}` : " (lønn ikke kommet)"} minus det du har betalt`}
         </p>
+
+        <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Inngående saldo</span>
+            <span className="tabular-nums">{formatNOK(start)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">
+              Lønn inn {lonnMottatt ? "" : "(ikke kommet)"}
+            </span>
+            <span className="tabular-nums">{formatNOK(lonnInn)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Betalt i perioden</span>
+            <span className="tabular-nums">−{formatNOK(betalt)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Levepenger brukt</span>
+            <span className="tabular-nums">−{formatNOK(leveSpent)}</span>
+          </div>
+          <div className="flex justify-between border-t border-border pt-1 font-semibold">
+            <span>Beregnet</span>
+            <span className="tabular-nums">{formatNOK(beregnet)}</span>
+          </div>
+        </div>
+
+
 
 
         <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-secondary">
