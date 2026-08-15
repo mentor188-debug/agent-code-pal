@@ -103,6 +103,60 @@ export function SaldoTab({
         </div>
       </Card>
 
+      <Card className="p-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Banknote className="size-4 text-primary" /> Faktisk saldo i banken
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            inputMode="decimal"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitActual}
+            placeholder="f.eks. 12500"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-secondary px-3 text-base tabular-nums outline-none focus:border-primary"
+          />
+          <button
+            type="button"
+            onClick={commitActual}
+            className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground active:scale-95"
+          >
+            Lagre
+          </button>
+        </div>
+        {actual !== undefined ? (
+          <div className="mt-3 space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Beregnet</span>
+              <span className="tabular-nums">{formatNOK(beregnet)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Avvik</span>
+              <span
+                className={`tabular-nums font-semibold ${avvik < 0 ? "text-destructive" : "text-primary"}`}
+              >
+                {avvik > 0 ? "+" : ""}
+                {formatNOK(avvik)}
+              </span>
+            </div>
+            <p className="pt-1 text-xs text-muted-foreground">
+              {Math.abs(avvik) < 1
+                ? "Alt stemmer med banken."
+                : avvik < 0
+                  ? "Banken har mindre enn beregnet – trolig utgifter som ikke er ført opp (levepenger, gebyr, trekk)."
+                  : "Banken har mer enn beregnet – trolig inntekt eller overført saldo som ikke er ført opp."}
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Legg inn saldoen banken viser, så bruker «Igjen nå» det ekte tallet og viser avviket mot
+            beregningen.
+          </p>
+        )}
+      </Card>
+
+
+
       <div className="grid grid-cols-2 gap-3">
         <Card className="p-4">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
