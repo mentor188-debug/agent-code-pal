@@ -7,13 +7,25 @@ import { PinLock } from "@/components/betaling/PinLock";
 import { BottomNav, type TabKey } from "@/components/betaling/BottomNav";
 import { HomeTab } from "@/components/betaling/tabs/HomeTab";
 import { KalenderTab } from "@/components/betaling/tabs/KalenderTab";
-import { GjeldTab, type CreditorSummary } from "@/components/betaling/tabs/GjeldTab";
+import { GjeldTab } from "@/components/betaling/tabs/GjeldTab";
 import { BudsjettTab } from "@/components/betaling/tabs/BudsjettTab";
 import { LevepengerTab } from "@/components/betaling/tabs/LevepengerTab";
 import { SparingTab } from "@/components/betaling/tabs/SparingTab";
 import { SaldoTab } from "@/components/betaling/tabs/SaldoTab";
-import { LONNSTREKK_SAK } from "@/lib/gjeldsplan";
-import { daysUntilFree, dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
+import { PendlingCard } from "@/components/betaling/PendlingCard";
+import { AbonnementCard } from "@/components/betaling/AbonnementCard";
+import { ForpliktelserCard } from "@/components/betaling/ForpliktelserCard";
+import { FordelBetalingDialog } from "@/components/betaling/FordelBetalingDialog";
+import { loadPlan, markUpdateSeen, savePlan, shouldAnnounceUpdate } from "@/lib/gjeld/store";
+import { defaultPlanState, pendlingTotal, type PlanState, type RegistrertBetaling } from "@/lib/gjeld/model";
+import {
+  byggPlan,
+  forecast,
+  kapasitetFor,
+  nesteBesteBetaling,
+  statusPerKreditor,
+} from "@/lib/gjeld/motor";
+import { dueDayFor, fasteAgenda, loadDue, type AgendaItem } from "@/lib/dager";
 import { dueReminders, fireOnce, fireReminders } from "@/lib/varsler";
 import { BudgetItemDialog } from "@/components/betaling/BudgetItemDialog";
 import { IncomeDialog } from "@/components/betaling/IncomeDialog";
