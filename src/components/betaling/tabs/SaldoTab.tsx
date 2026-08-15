@@ -1,7 +1,10 @@
-import { CheckCircle2, Circle, Coins, ShoppingBasket, Wallet } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Banknote, CheckCircle2, Circle, Coins, ShoppingBasket, Wallet } from "lucide-react";
 import { Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
+import { loadActual, saveActual } from "@/lib/saldo";
 import type { AgendaItem } from "@/lib/dager";
+
 
 export function SaldoTab({
   months,
@@ -28,18 +31,46 @@ export function SaldoTab({
   leveSpent: number;
   onToggle: (id: string) => void;
 }) {
+  const [actuals, setActuals] = useState<Record<string, number>>({});
+  const [draft, setDraft] = useState("");
+
+  useEffect(() => {
+    setActuals(loadActual());
+  }, []);
+
+  const actual = actuals[current];
+  useEffect(() => {
+    setDraft(actual === undefined ? "" : String(actual));
+  }, [current, actual]);
+
+  const commitActual = () => {
+    const cleaned = draft.replace(/\s/g, "").replace(",", ".");
+    const next = { ...actuals };
+    if (cleaned === "") delete next[current];
+    else {
+      const n = Number(cleaned);
+      if (!Number.isFinite(n)) return;
+      next[current] = n;
+    }
+    setActuals(next);
+    saveActual(next);
+  };
+
   const paidItems = items.filter((i) => paidIds.includes(i.id));
   const openItems = items.filter((i) => !paidIds.includes(i.id));
   const betalt = paidItems.reduce((s, i) => s + i.amount, 0);
   const gjenstaar = openItems.reduce((s, i) => s + i.amount, 0);
   const leveRest = Math.max(0, leveAvailable - leveSpent);
 
-  const disponibelt = netto - betalt - leveSpent;
+  const beregnet = netto - betalt - leveSpent;
+  const disponibelt = actual !== undefined ? actual : beregnet;
+  const avvik = actual !== undefined ? actual - beregnet : 0;
   const etterAlt = disponibelt - gjenstaar - leveRest;
 
   const brukt = betalt + leveSpent;
   const pct = netto > 0 ? Math.min(100, (brukt / netto) * 100) : 0;
   const reservertPct = netto > 0 ? Math.min(100 - pct, ((gjenstaar + leveRest) / netto) * 100) : 0;
+
 
   return (
     <div className="space-y-4">
@@ -56,8 +87,11 @@ export function SaldoTab({
           {formatNOK(disponibelt)}
         </p>
         <p className="text-sm text-muted-foreground">
-          Netto {formatNOK(netto)} minus det du faktisk har betalt
+          {actual !== undefined
+            ? `Faktisk saldo i banken · beregnet var ${formatNOK(beregnet)}`
+            : `Netto ${formatNOK(netto)} minus det du faktisk har betalt`}
         </p>
+
 
         <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-secondary">
           <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
@@ -68,6 +102,60 @@ export function SaldoTab({
           <span>Reservert {formatNOK(gjenstaar + leveRest)}</span>
         </div>
       </Card>
+
+      <Card className="p-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Banknote className="size-4 text-primary" /> Faktisk saldo i banken
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            inputMode="decimal"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={commitActual}
+            placeholder="f.eks. 12500"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-secondary px-3 text-base tabular-nums outline-none focus:border-primary"
+          />
+          <button
+            type="button"
+            onClick={commitActual}
+            className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground active:scale-95"
+          >
+            Lagre
+          </button>
+        </div>
+        {actual !== undefined ? (
+          <div className="mt-3 space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Beregnet</span>
+              <span className="tabular-nums">{formatNOK(beregnet)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Avvik</span>
+              <span
+                className={`tabular-nums font-semibold ${avvik < 0 ? "text-destructive" : "text-primary"}`}
+              >
+                {avvik > 0 ? "+" : ""}
+                {formatNOK(avvik)}
+              </span>
+            </div>
+            <p className="pt-1 text-xs text-muted-foreground">
+              {Math.abs(avvik) < 1
+                ? "Alt stemmer med banken."
+                : avvik < 0
+                  ? "Banken har mindre enn beregnet – trolig utgifter som ikke er ført opp (levepenger, gebyr, trekk)."
+                  : "Banken har mer enn beregnet – trolig inntekt eller overført saldo som ikke er ført opp."}
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Legg inn saldoen banken viser, så bruker «Igjen nå» det ekte tallet og viser avviket mot
+            beregningen.
+          </p>
+        )}
+      </Card>
+
+
 
       <div className="grid grid-cols-2 gap-3">
         <Card className="p-4">
