@@ -87,8 +87,11 @@ export function SaldoTab({
           {formatNOK(disponibelt)}
         </p>
         <p className="text-sm text-muted-foreground">
-          Netto {formatNOK(netto)} minus det du faktisk har betalt
+          {actual !== undefined
+            ? `Faktisk saldo i banken · beregnet var ${formatNOK(beregnet)}`
+            : `Netto ${formatNOK(netto)} minus det du faktisk har betalt`}
         </p>
+
 
         <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-secondary">
           <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
