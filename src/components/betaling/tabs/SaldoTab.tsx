@@ -10,7 +10,14 @@ import {
 } from "lucide-react";
 import { Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
-import { loadActual, saveActual } from "@/lib/saldo";
+import {
+  loadActual,
+  loadLonn,
+  loadStart,
+  saveActual,
+  saveLonn,
+  saveStart,
+} from "@/lib/saldo";
 import type { AgendaItem } from "@/lib/dager";
 import type { LiveCost } from "@/lib/levepenger";
 import { dayInRange, monthRange, rangeLabel } from "@/lib/periode";
@@ -43,13 +50,44 @@ export function SaldoTab({
   onToggle: (id: string) => void;
 }) {
   const [actuals, setActuals] = useState<Record<string, number>>({});
+  const [starts, setStarts] = useState<Record<string, number>>({});
+  const [lonn, setLonn] = useState<Record<string, boolean>>({});
   const [log, setLog] = useState<SyncLogEntry[]>([]);
   const [draft, setDraft] = useState("");
+  const [startDraft, setStartDraft] = useState("");
 
   useEffect(() => {
     setActuals(loadActual());
+    setStarts(loadStart());
+    setLonn(loadLonn());
     setLog(loadSyncLog());
   }, []);
+
+  const start = starts[current] ?? 0;
+  useEffect(() => {
+    setStartDraft(starts[current] === undefined ? "" : String(starts[current]));
+  }, [current, starts]);
+
+  const lonnMottatt = lonn[current] ?? true;
+  const toggleLonn = () => {
+    const next = { ...lonn, [current]: !lonnMottatt };
+    setLonn(next);
+    saveLonn(next);
+  };
+
+  const commitStart = () => {
+    const cleaned = startDraft.replace(/\s/g, "").replace(",", ".");
+    const next = { ...starts };
+    if (cleaned === "") delete next[current];
+    else {
+      const n = Number(cleaned);
+      if (!Number.isFinite(n)) return;
+      next[current] = n;
+    }
+    setStarts(next);
+    saveStart(next);
+  };
+
 
   const actual = actuals[current];
   useEffect(() => {
@@ -82,14 +120,17 @@ export function SaldoTab({
   const gjenstaar = openItems.reduce((s, i) => s + i.amount, 0);
   const leveRest = Math.max(0, leveAvailable - leveSpent);
 
-  const beregnet = netto - betalt - leveSpent;
+  const lonnInn = lonnMottatt ? netto : 0;
+  const beregnet = start + lonnInn - betalt - leveSpent;
   const disponibelt = actual !== undefined ? actual : beregnet;
   const avvik = actual !== undefined ? actual - beregnet : 0;
   const etterAlt = disponibelt - gjenstaar - leveRest;
 
   const brukt = betalt + leveSpent;
-  const pct = netto > 0 ? Math.min(100, (brukt / netto) * 100) : 0;
-  const reservertPct = netto > 0 ? Math.min(100 - pct, ((gjenstaar + leveRest) / netto) * 100) : 0;
+  const grunnlag = start + lonnInn;
+  const pct = grunnlag > 0 ? Math.min(100, (brukt / grunnlag) * 100) : 0;
+  const reservertPct =
+    grunnlag > 0 ? Math.min(100 - pct, ((gjenstaar + leveRest) / grunnlag) * 100) : 0;
 
 
   return (
@@ -124,8 +165,35 @@ export function SaldoTab({
         <p className="text-sm text-muted-foreground">
           {actual !== undefined
             ? `Faktisk saldo i banken · beregnet var ${formatNOK(beregnet)}`
-            : `Netto ${formatNOK(netto)} minus det du faktisk har betalt`}
+            : `Inngående saldo ${formatNOK(start)}${lonnMottatt ? ` + lønn ${formatNOK(netto)}` : " (lønn ikke kommet)"} minus det du har betalt`}
         </p>
+
+        <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Inngående saldo</span>
+            <span className="tabular-nums">{formatNOK(start)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">
+              Lønn inn {lonnMottatt ? "" : "(ikke kommet)"}
+            </span>
+            <span className="tabular-nums">{formatNOK(lonnInn)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Betalt i perioden</span>
+            <span className="tabular-nums">−{formatNOK(betalt)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Levepenger brukt</span>
+            <span className="tabular-nums">−{formatNOK(leveSpent)}</span>
+          </div>
+          <div className="flex justify-between border-t border-border pt-1 font-semibold">
+            <span>Beregnet</span>
+            <span className="tabular-nums">{formatNOK(beregnet)}</span>
+          </div>
+        </div>
+
+
 
 
         <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-secondary">
@@ -136,6 +204,45 @@ export function SaldoTab({
           <span>Betalt {formatNOK(brukt)}</span>
           <span>Reservert {formatNOK(gjenstaar + leveRest)}</span>
         </div>
+      </Card>
+
+      <Card className="p-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Wallet className="size-4 text-primary" /> Inngående saldo ved månedsstart
+        </div>
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            inputMode="decimal"
+            value={startDraft}
+            onChange={(e) => setStartDraft(e.target.value)}
+            onBlur={commitStart}
+            placeholder="f.eks. 3200"
+            className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-secondary px-3 text-base tabular-nums outline-none focus:border-primary"
+          />
+          <button
+            type="button"
+            onClick={commitStart}
+            className="h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground active:scale-95"
+          >
+            Lagre
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={toggleLonn}
+          className="mt-3 flex w-full items-center justify-between rounded-xl border border-border bg-secondary px-3 py-3 text-left text-sm active:scale-[0.99]"
+        >
+          <span>Lønnen er kommet inn på konto</span>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-medium ${lonnMottatt ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+          >
+            {lonnMottatt ? "Ja" : "Nei"}
+          </span>
+        </button>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Det som stod på konto da måneden startet, pluss om lønnen faktisk har kommet. Uten disse
+          to blir «Igjen» alltid ulik banken.
+        </p>
       </Card>
 
       <Card className="p-4">
