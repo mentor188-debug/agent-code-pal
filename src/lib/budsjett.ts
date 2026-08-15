@@ -49,9 +49,18 @@ export function loadBudget(): BudgetData {
 
 export const saveBudget = (v: BudgetData) => window.localStorage.setItem(KEY, JSON.stringify(v));
 
-export function incomeFor(month: string, b: BudgetData): MonthIncome & { netto: number } {
+export function incomeFor(
+  month: string,
+  b: BudgetData,
+): MonthIncome & { netto: number; actual: boolean } {
   const m = b.months[month] ?? { brutto: 0, skatt: 0, utleggstrekk: 0 };
-  return { ...m, netto: m.brutto + m.skatt + m.utleggstrekk };
+  const meta = MONTHS.find((x) => x.key === month);
+  const overstyrt =
+    m.brutto !== meta?.brutto || m.skatt !== meta?.skatt || m.utleggstrekk !== meta?.utleggstrekk;
+  // August er faktisk registrert netto, ikke brutto minus trekk.
+  const netto =
+    meta?.actual && !overstyrt ? meta.netto : m.brutto + m.skatt + m.utleggstrekk;
+  return { ...m, netto, actual: Boolean(meta?.actual) };
 }
 
 export const fasteSumOf = (b: BudgetData) => b.faste.reduce((s, f) => s + f.amount, 0);
