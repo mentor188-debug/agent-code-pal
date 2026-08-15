@@ -162,23 +162,59 @@ function Index() {
     leveTerskel,
   );
 
+  // Resurs avsluttes etter valgt sluttmåned – da forsvinner den fra faste utgifter.
+  const fasteFor = (key: string) =>
+    budget.faste.filter((f) => !/resurs/i.test(f.name) || key <= plan.resursSlutt);
+  const fasteSumFor = (key: string) => fasteFor(key).reduce((s, f) => s + f.amount, 0);
+
+  const kapasitet = useMemo(
+    () => (key: string) =>
+      kapasitetFor(key, plan, {
+        netto: incomeFor(key, budget).netto,
+        faste: fasteSumFor(key),
+        engangs: engangsOf(key, budget).reduce((s, e) => s + e.amount, 0),
+        levepenger: budgetFor(key, liveBudgets),
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [plan, budget, liveBudgets],
+  );
+
+  const planDebts = useMemo<Debt[]>(
+    () =>
+      byggPlan(plan, (m) => kapasitet(m).tilGjeld, currentMonthKey()).map((p) => ({
+        id: p.id,
+        month: p.month,
+        creditor: p.creditor,
+        caseNo: p.caseNo,
+        description: p.description,
+        amount: p.amount,
+        kid: p.kid,
+        account: p.account,
+        auto: false,
+        urgent: p.urgent,
+      })),
+    [plan, kapasitet],
+  );
+
   const resultFor = (key: string, leve = budgetFor(key, liveBudgets)) => {
     const inc = incomeFor(key, budget);
-    const gjeld = debtsFor(key, extra).reduce((s, d) => s + d.amount, 0);
+    const gjeld = debtsFor(key, extra, planDebts).reduce((s, d) => s + d.amount, 0);
     const eng = engangsOf(key, budget).reduce((s, e) => s + e.amount, 0);
-    const faste = fasteSumOf(budget);
+    const faste = fasteSumFor(key);
+    const pendling = kapasitet(key).pendling;
     return {
       netto: inc.netto,
       faste,
       engangs: eng,
       gjeld,
-      resultat: inc.netto - faste - eng - gjeld - leve,
+      pendling,
+      resultat: inc.netto - faste - eng - gjeld - leve - pendling,
     };
   };
   const res = resultFor(current, leveBudget);
 
   const agenda = useMemo<AgendaItem[]>(() => {
-    const debts = debtsFor(current, extra).map((d, i) => ({
+    const debts = debtsFor(current, extra, planDebts).map((d, i) => ({
       id: d.id,
       day: dueDayFor(d, due, i),
       name: d.creditor,
@@ -195,106 +231,29 @@ function Index() {
       amount: e.amount,
       urgent: false,
     }));
-    return [...fasteAgenda(budget.faste), ...eng, ...debts].sort((a, b) => a.day - b.day);
-  }, [current, extra, due, budget]);
+    return [...fasteAgenda(fasteFor(current)), ...eng, ...debts].sort((a, b) => a.day - b.day);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current, extra, due, budget, planDebts, plan.resursSlutt]);
 
-  const totalPlan = useMemo(
-    () => MONTH_KEYS.reduce((s, k) => s + monthResult(k, extra).gjeld, 0) + LONNSTREKK_SAK.amount,
-    [extra],
+  const kreditorer = useMemo(() => statusPerKreditor(plan), [plan]);
+  const estimertGjeld = kreditorer.reduce((s, k) => s + k.estimert, 0);
+  const dokumentertTotal = kreditorer.reduce((s, k) => s + k.dokumentert, 0);
+  const bekreftetBetalt = kreditorer.reduce((s, k) => s + k.bekreftetBetalt + k.ufordelt, 0);
+  const ufordeltSum = kreditorer.reduce((s, k) => s + k.ufordelt, 0);
+  const samletKvalitet = kreditorer.some((k) => k.kvalitet === "rod")
+    ? ("rod" as const)
+    : kreditorer.some((k) => k.kvalitet === "gul")
+      ? ("gul" as const)
+      : ("gronn" as const);
+
+  const forecastData = useMemo(
+    () => forecast(plan, (m) => kapasitet(m).tilGjeld, currentMonthKey()),
+    [plan, kapasitet],
   );
-  const totalPaid = useMemo(
-    () =>
-      MONTH_KEYS.flatMap((k) => debtsFor(k, extra))
-        .filter((d) => paid.includes(d.id))
-        .reduce((s, d) => s + d.amount, 0),
-    [paid, extra],
-  );
+  const kapasitetNa = kapasitet(currentMonthKey());
+  const neste = nesteBesteBetaling(plan, kapasitetNa.tilGjeld);
+  const monthName = (key: string | null) => (key ? monthLabel(key) : "senere enn juni 2027");
 
-  const gjeldChart = useMemo(() => {
-    let rest = totalPlan;
-    return MONTH_KEYS.map((k) => {
-      rest -= monthResult(k, extra).gjeld;
-      return { month: shortMonthLabel(k), gjeld: Math.max(0, Math.round(rest)) };
-    });
-  }, [extra, totalPlan]);
-
-  const creditors = useMemo<CreditorSummary[]>(() => {
-    const map = new Map<
-      string,
-      CreditorSummary & { caseSet: Set<string>; paidCases: Set<string>; kidSet: Set<string> }
-    >();
-    MONTH_KEYS.forEach((k) => {
-      debtsFor(k, extra).forEach((d) => {
-        const cur =
-          map.get(d.creditor) ??
-          ({
-            creditor: d.creditor,
-            total: 0,
-            paid: 0,
-            cases: 0,
-            casesPaid: 0,
-            note: d.description,
-            target: shortMonthLabel(k),
-            caseNos: [],
-            kids: [],
-            urgent: false,
-            caseSet: new Set<string>(),
-            paidCases: new Set<string>(),
-            kidSet: new Set<string>(),
-          } as CreditorSummary & {
-            caseSet: Set<string>;
-            paidCases: Set<string>;
-            kidSet: Set<string>;
-          });
-        cur.total += d.amount;
-        cur.caseSet.add(d.caseNo);
-        if (d.kid) cur.kidSet.add(d.kid);
-        if (d.urgent) cur.urgent = true;
-        if (paid.includes(d.id)) {
-          cur.paid += d.amount;
-          cur.paidCases.add(d.caseNo);
-        }
-        cur.target = shortMonthLabel(k);
-        map.set(d.creditor, cur);
-      });
-    });
-    const lonn = map.get(LONNSTREKK_SAK.creditor);
-    if (lonn) {
-      lonn.total += LONNSTREKK_SAK.amount;
-      lonn.caseSet.add(LONNSTREKK_SAK.caseNo);
-    } else {
-      map.set(LONNSTREKK_SAK.creditor, {
-        creditor: LONNSTREKK_SAK.creditor,
-        total: LONNSTREKK_SAK.amount,
-        paid: 0,
-        cases: 1,
-        casesPaid: 0,
-        note: "Lønnstrekk via Namsfogden",
-        target: "feb.",
-        caseNos: [],
-        kids: [],
-        urgent: false,
-        caseSet: new Set([LONNSTREKK_SAK.caseNo]),
-        paidCases: new Set<string>(),
-        kidSet: new Set<string>(),
-      });
-    }
-    return [...map.values()]
-
-      .map((c) => ({
-        creditor: c.creditor,
-        total: c.total,
-        paid: c.paid,
-        cases: c.caseSet.size,
-        casesPaid: c.paidCases.size,
-        note: c.note,
-        target: c.target,
-        urgent: c.urgent,
-        caseNos: [...c.caseSet],
-        kids: [...c.kidSet],
-      }))
-      .sort((a, b) => b.total - a.total);
-  }, [extra, paid]);
 
   const buffer = MONTH_KEYS.map((k) => ({
     month: monthLabel(k),
