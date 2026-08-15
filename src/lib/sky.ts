@@ -10,6 +10,11 @@ export const SYNC_ITEMS = [
   { key: "bt_leve_costs_v1", label: "Levepenger – utgifter", hint: "Registrerte kjøp" },
   { key: "bt_leve_budsjett_v1", label: "Levepenger – budsjett", hint: "Månedsramme" },
   { key: "bt_leve_terskel_v1", label: "Levepenger – terskel", hint: "Når du får varsel" },
+  {
+    key: "bt_plan_v3",
+    label: "Gjeldsplan",
+    hint: "Saker, saldoer, betalinger, kredittfil og pendlerscenario",
+  },
 ] as const;
 
 export type SyncKey = (typeof SYNC_ITEMS)[number]["key"];
