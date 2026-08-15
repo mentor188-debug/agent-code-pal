@@ -1,9 +1,20 @@
 import { useEffect, useState } from "react";
-import { Banknote, CheckCircle2, Circle, Coins, ShoppingBasket, Wallet } from "lucide-react";
+import {
+  Banknote,
+  CalendarRange,
+  CheckCircle2,
+  Circle,
+  Coins,
+  ShoppingBasket,
+  Wallet,
+} from "lucide-react";
 import { Card, MonthChips, PageTitle, SectionTitle } from "@/components/betaling/Bits";
 import { formatNOK } from "@/lib/betaling";
 import { loadActual, saveActual } from "@/lib/saldo";
 import type { AgendaItem } from "@/lib/dager";
+import type { LiveCost } from "@/lib/levepenger";
+import { dayInRange, monthRange, rangeLabel } from "@/lib/periode";
+import { loadSyncLog, type SyncLogEntry } from "@/lib/banklogg";
 
 
 export function SaldoTab({
@@ -16,7 +27,7 @@ export function SaldoTab({
   items,
   paidIds,
   leveAvailable,
-  leveSpent,
+  leveCosts,
   onToggle,
 }: {
   months: string[];
@@ -28,14 +39,16 @@ export function SaldoTab({
   items: AgendaItem[];
   paidIds: string[];
   leveAvailable: number;
-  leveSpent: number;
+  leveCosts: LiveCost[];
   onToggle: (id: string) => void;
 }) {
   const [actuals, setActuals] = useState<Record<string, number>>({});
+  const [log, setLog] = useState<SyncLogEntry[]>([]);
   const [draft, setDraft] = useState("");
 
   useEffect(() => {
     setActuals(loadActual());
+    setLog(loadSyncLog());
   }, []);
 
   const actual = actuals[current];
@@ -56,8 +69,15 @@ export function SaldoTab({
     saveActual(next);
   };
 
-  const paidItems = items.filter((i) => paidIds.includes(i.id));
-  const openItems = items.filter((i) => !paidIds.includes(i.id));
+  // Samme avgrensning som banksynken: kun poster innenfor månedsvinduet.
+  const periode = monthRange(current);
+  const windowItems = items.filter((i) => dayInRange(i.day, current));
+  const paidItems = windowItems.filter((i) => paidIds.includes(i.id));
+  const openItems = windowItems.filter((i) => !paidIds.includes(i.id));
+  const leveSpent = leveCosts
+    .filter((c) => c.month === current && dayInRange(c.day, current))
+    .reduce((s, c) => s + c.amount, 0);
+  const lastSync = log.find((e) => e.month === current);
   const betalt = paidItems.reduce((s, i) => s + i.amount, 0);
   const gjenstaar = openItems.reduce((s, i) => s + i.amount, 0);
   const leveRest = Math.max(0, leveAvailable - leveSpent);
@@ -76,6 +96,21 @@ export function SaldoTab({
     <div className="space-y-4">
       <PageTitle>Igjen nå</PageTitle>
       <MonthChips months={months} value={current} onChange={onMonth} label={label} />
+
+      <Card className="p-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <CalendarRange className="size-4 text-primary" /> Periode {rangeLabel(current)}
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Samme tidsvindu som banksynken bruker ({periode.from} – {periode.to}), så tallene her
+          dekker nøyaktig det som hentes fra banken.
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {lastSync
+            ? `Siste banksynk ${new Date(lastSync.at).toLocaleString("nb-NO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })} · ${lastSync.appliedCount} avhuket av ${lastSync.foundCount} forslag`
+            : "Ingen banksynk kjørt for denne perioden ennå."}
+        </p>
+      </Card>
 
       <Card className="p-5">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
