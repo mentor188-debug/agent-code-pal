@@ -120,14 +120,17 @@ export function SaldoTab({
   const gjenstaar = openItems.reduce((s, i) => s + i.amount, 0);
   const leveRest = Math.max(0, leveAvailable - leveSpent);
 
-  const beregnet = netto - betalt - leveSpent;
+  const lonnInn = lonnMottatt ? netto : 0;
+  const beregnet = start + lonnInn - betalt - leveSpent;
   const disponibelt = actual !== undefined ? actual : beregnet;
   const avvik = actual !== undefined ? actual - beregnet : 0;
   const etterAlt = disponibelt - gjenstaar - leveRest;
 
   const brukt = betalt + leveSpent;
-  const pct = netto > 0 ? Math.min(100, (brukt / netto) * 100) : 0;
-  const reservertPct = netto > 0 ? Math.min(100 - pct, ((gjenstaar + leveRest) / netto) * 100) : 0;
+  const grunnlag = start + lonnInn;
+  const pct = grunnlag > 0 ? Math.min(100, (brukt / grunnlag) * 100) : 0;
+  const reservertPct =
+    grunnlag > 0 ? Math.min(100 - pct, ((gjenstaar + leveRest) / grunnlag) * 100) : 0;
 
 
   return (
